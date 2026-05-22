@@ -2,8 +2,8 @@
 # requirements.txt — Doña Sara (Django POS)
 # ============================================================
 # Sólo las dependencias top-level que el proyecto usa de forma
-# directa. Las transitivas (asgiref, sqlparse, tzdata) las trae
-# pip automáticamente al instalar Django.
+# directa. Las transitivas (asgiref, sqlparse, tzdata, packaging)
+# las trae pip automáticamente al instalar las de abajo.
 # ============================================================
 
 # Framework principal
@@ -17,3 +17,6 @@ whitenoise>=6.0
 
 # Parsear DATABASE_URL en deploy (Heroku, Render, Railway, etc.)
 dj-database-url>=3.1
+
+# Servidor WSGI de producción
+gunicorn>=23.0
