@@ -22,7 +22,7 @@ $(function () {
     var $bottomToggle = $('#sidebarToggle');
     var $closeBtn = $('#sidebarCloseBtn');
 
-    function isMobile() { return window.matchMedia('(max-width: 767.98px)').matches; }
+    function isMobile() { return window.matchMedia('(max-width: 991.98px)').matches; }
 
     function showSidebar() {
         $sidebar.addClass('toggled');

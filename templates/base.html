@@ -48,8 +48,8 @@
     <aside aria-label="Menú lateral">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-            {# Botón ✕ visible sólo en mobile para cerrar el sidebar #}
-            <button type="button" class="sidebar-close-btn d-md-none" id="sidebarCloseBtn" aria-label="Cerrar menú">
+            {# Botón ✕ visible en mobile y tablet (< 992px) para cerrar el sidebar #}
+            <button type="button" class="sidebar-close-btn d-lg-none" id="sidebarCloseBtn" aria-label="Cerrar menú">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
 
@@ -129,7 +129,7 @@
             {# Topbar — header con barra superior #}
             <header class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow" role="banner">
 
-                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button" aria-label="Abrir menú">
+                <button id="sidebarToggleTop" class="btn btn-link d-lg-none rounded-circle mr-3" type="button" aria-label="Abrir menú">
                     <i class="fa fa-bars" aria-hidden="true"></i>
                 </button>
 
