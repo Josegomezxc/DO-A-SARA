@@ -134,11 +134,10 @@ body {
 
 
 /* ============================================================
-   4. Sidebar — mobile-first
-   - Mobile (default): oculta off-screen a la izquierda.
-     Aparece al togglear el hamburger.
-   - Tablet+ (>= 768px): visible normal con ancho fijo.
-     Al togglear, se colapsa a 5.5rem (icons only).
+   4. Sidebar — comportamiento responsive estricto por viewport
+   - Mobile (< 768px): off-screen, slide-in al togglear, overlay
+   - Desktop (>= 768px): visible normal (14rem) o colapsado (5.5rem)
+   Reglas envueltas en su @media para evitar guerras de specificity.
 ============================================================ */
 
 .bg-gradient-primary {
@@ -146,33 +145,14 @@ body {
   background-image: linear-gradient(180deg, var(--brand-deep) 10%, #0F1E5C 100%) !important;
 }
 
-/* ---------- Mobile (default, < 768px) ---------- */
-#accordionSidebar.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--sidebar-width, 14rem) !important;
-  height: 100vh;
-  z-index: 1050;
-  overflow-y: auto;
-  overflow-x: hidden;
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* ---------- Common a todos los viewports ---------- */
+.sidebar .nav-link span,
+.sidebar .sidebar-brand-text,
+.sidebar .sidebar-heading {
+  transition: opacity var(--transition-base), visibility var(--transition-base);
 }
 
-/* Cuando está toggleada en mobile => visible (slide in) */
-#accordionSidebar.sidebar.toggled {
-  transform: translateX(0);
-  width: var(--sidebar-width, 14rem) !important;
-}
-
-/* En mobile el contenido NO se mueve — el sidebar es overlay */
-#content-wrapper {
-  margin-left: 0 !important;
-  width: 100% !important;
-}
-
-/* Backdrop para mobile: aparece al abrir la sidebar */
+/* Backdrop (sólo visible en mobile, ver @media abajo) */
 .sidebar-backdrop {
   display: none;
   position: fixed;
@@ -188,76 +168,211 @@ body {
   opacity: 1;
 }
 
-/* Textos: visibles en mobile (sidebar entera abierta o cerrada) */
-.sidebar .nav-link span,
-.sidebar .sidebar-brand-text,
-.sidebar .sidebar-heading {
-  transition: opacity var(--transition-base), visibility var(--transition-base);
+/* Botón ✕ del sidebar (estilo, visibilidad por @media) */
+.sidebar-close-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.sidebar-close-btn:hover,
+.sidebar-close-btn:focus {
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  outline: none;
 }
 
 
-/* ---------- Tablet + Desktop (>= 768px) ---------- */
+/* ============================================================
+   MOBILE  (<= 767.98px)
+   - Sidebar fixed, off-screen por default
+   - .toggled = visible (slide-in)
+   - Botón ✕ y backdrop visibles
+   - Nav-links a ancho completo, texto visible
+============================================================ */
+
+@media (max-width: 767.98px) {
+
+  #accordionSidebar.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width, 14rem) !important;
+    height: 100vh;
+    z-index: 1050;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  #accordionSidebar.sidebar.toggled {
+    transform: translateX(0);
+    width: var(--sidebar-width, 14rem) !important;
+  }
+
+  #content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Forzar nav-links a ancho completo del sidebar (override SB Admin 2's 6.5rem) */
+  #accordionSidebar.sidebar .nav-item .nav-link {
+    width: 100% !important;
+    text-align: left !important;
+    padding: 0.85rem 1.2rem !important;
+    white-space: normal;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  #accordionSidebar.sidebar .nav-item .nav-link i {
+    font-size: 0.95rem;
+    margin: 0;
+    flex-shrink: 0;
+    width: 1.4rem;
+    text-align: center;
+  }
+
+  /* Texto SIEMPRE visible en mobile (incluso si tiene .toggled) */
+  #accordionSidebar.sidebar .nav-item .nav-link span {
+    display: inline !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 0.92rem !important;
+    font-weight: 600;
+  }
+
+  #accordionSidebar.sidebar .sidebar-brand-text {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  #accordionSidebar.sidebar .sidebar-heading {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  #accordionSidebar.sidebar .sidebar-card {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+
+/* ============================================================
+   DESKTOP  (>= 768px)
+   - Sidebar visible normal (14rem)
+   - .toggled = colapsada a 5.5rem (icons only)
+   - Backdrop y botón ✕ ocultos
+============================================================ */
+
 @media (min-width: 768px) {
-  /* Sidebar visible normal */
+
+  /* Sidebar normal */
   #accordionSidebar.sidebar {
     position: static;
     transform: none;
+    width: var(--sidebar-width, 14rem) !important;
     height: auto;
+    overflow: visible;
     transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
-  /* Toggled en desktop = colapsar a icons only */
+  /* Sidebar colapsada */
   #accordionSidebar.sidebar.toggled {
     transform: none;
     width: var(--sidebar-width-collapsed, 5.5rem) !important;
     overflow: hidden;
   }
 
-  .sidebar.toggled .nav-link span,
-  .sidebar.toggled .sidebar-brand-text,
-  .sidebar.toggled .sidebar-heading,
-  .sidebar.toggled .sidebar-card,
-  .sidebar.toggled .collapse,
-  .sidebar.toggled .collapsing {
-    opacity: 0;
-    visibility: hidden;
+  /* Ocultar textos cuando colapsada */
+  #accordionSidebar.sidebar.toggled .nav-link span,
+  #accordionSidebar.sidebar.toggled .sidebar-brand-text,
+  #accordionSidebar.sidebar.toggled .sidebar-heading,
+  #accordionSidebar.sidebar.toggled .sidebar-card,
+  #accordionSidebar.sidebar.toggled .collapse,
+  #accordionSidebar.sidebar.toggled .collapsing {
+    opacity: 0 !important;
+    visibility: hidden !important;
     display: none !important;
   }
 
-  .sidebar.toggled .nav-item .nav-link {
-    text-align: center;
-    padding: 0.9rem 0;
-    width: var(--sidebar-width-collapsed, 5.5rem);
+  /* Nav-links normales (sidebar expandida) */
+  #accordionSidebar.sidebar:not(.toggled) .nav-item .nav-link {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  .sidebar.toggled .nav-item .nav-link i {
+  #accordionSidebar.sidebar:not(.toggled) .nav-item .nav-link i {
+    font-size: 0.9rem;
+    width: 1.3rem;
+    text-align: center;
+    margin: 0;
+  }
+
+  #accordionSidebar.sidebar:not(.toggled) .nav-item .nav-link span {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  /* Nav-links colapsados (sólo icono centrado) */
+  #accordionSidebar.sidebar.toggled .nav-item .nav-link {
+    text-align: center !important;
+    padding: 0.9rem 0 !important;
+    width: var(--sidebar-width-collapsed, 5.5rem) !important;
+    justify-content: center;
+    gap: 0;
+  }
+
+  #accordionSidebar.sidebar.toggled .nav-item .nav-link i {
     font-size: 1.2rem;
     margin: 0;
     width: auto;
     display: inline-block;
   }
 
-  .sidebar.toggled .sidebar-brand {
+  #accordionSidebar.sidebar.toggled .sidebar-brand {
     padding: 1.5rem 0;
   }
 
-  .sidebar.toggled .sidebar-brand-icon {
+  #accordionSidebar.sidebar.toggled .sidebar-brand-icon {
     margin: 0;
   }
 
-  .sidebar.toggled .nav-item.active > .nav-link {
+  #accordionSidebar.sidebar.toggled .nav-item.active > .nav-link {
     background-color: rgba(255, 255, 255, 0.10);
     border-left: 3px solid var(--color-white);
   }
 
-  /* Backdrop nunca se ve en desktop */
-  .sidebar-backdrop {
-    display: none !important;
+  .sidebar.toggled .nav-item .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.10);
   }
-}
 
-.sidebar.toggled .nav-item .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.10);
+  /* Ocultos en desktop */
+  .sidebar-backdrop { display: none !important; }
+  .sidebar-close-btn { display: none !important; }
 }
 
 /* Heading "ADMINISTRACIÓN" en color de acento amarillo para diferenciarlo

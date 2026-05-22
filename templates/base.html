@@ -48,6 +48,11 @@
     <aside aria-label="Menú lateral">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
+            {# Botón ✕ visible sólo en mobile para cerrar el sidebar #}
+            <button type="button" class="sidebar-close-btn d-md-none" id="sidebarCloseBtn" aria-label="Cerrar menú">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'users:dashboard' %}" aria-label="Ir al dashboard de {{ NEGOCIO_NOMBRE }}">
                 <div class="sidebar-brand-icon rotate-n-15" aria-hidden="true">
                     <i class="fas fa-hamburger"></i>

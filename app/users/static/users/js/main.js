@@ -15,11 +15,12 @@ $(function () {
         if (!confirm(msg)) e.preventDefault();
     });
 
-    // ===== Sidebar mobile: hamburger + backdrop =====
+    // ===== Sidebar mobile: hamburger + backdrop + close button =====
     var $sidebar = $('#accordionSidebar');
     var $backdrop = $('#sidebarBackdrop');
     var $hamburger = $('#sidebarToggleTop');
     var $bottomToggle = $('#sidebarToggle');
+    var $closeBtn = $('#sidebarCloseBtn');
 
     function isMobile() { return window.matchMedia('(max-width: 767.98px)').matches; }
 
@@ -59,9 +60,22 @@ $(function () {
     // Click en el backdrop cierra el sidebar
     $backdrop.on('click', hideSidebar);
 
+    // Click en el botón ✕ del sidebar cierra el sidebar
+    $closeBtn.on('click', function (e) {
+        e.preventDefault();
+        hideSidebar();
+    });
+
     // En mobile, click en un link del sidebar cierra el sidebar después de navegar
     $sidebar.on('click', 'a.nav-link[href]:not([href="#"])', function () {
         if (isMobile()) hideSidebar();
+    });
+
+    // Cerrar con ESC
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && $sidebar.hasClass('toggled') && isMobile()) {
+            hideSidebar();
+        }
     });
 
     // Si redimensionan la ventana hacia desktop, sacamos el backdrop
