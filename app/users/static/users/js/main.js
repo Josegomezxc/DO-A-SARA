@@ -14,6 +14,67 @@ $(function () {
         var msg = $(this).data('confirm') || '¿Estás seguro?';
         if (!confirm(msg)) e.preventDefault();
     });
+
+    // ===== Sidebar mobile: hamburger + backdrop =====
+    var $sidebar = $('#accordionSidebar');
+    var $backdrop = $('#sidebarBackdrop');
+    var $hamburger = $('#sidebarToggleTop');
+    var $bottomToggle = $('#sidebarToggle');
+
+    function isMobile() { return window.matchMedia('(max-width: 767.98px)').matches; }
+
+    function showSidebar() {
+        $sidebar.addClass('toggled');
+        if (isMobile()) {
+            $backdrop.addClass('show');
+            $('body').css('overflow', 'hidden');
+        }
+    }
+
+    function hideSidebar() {
+        $sidebar.removeClass('toggled');
+        $backdrop.removeClass('show');
+        $('body').css('overflow', '');
+    }
+
+    function toggleSidebar() {
+        if ($sidebar.hasClass('toggled')) {
+            hideSidebar();
+        } else {
+            showSidebar();
+        }
+    }
+
+    // SB Admin 2 trae su propio handler en sb-admin-2.min.js; lo reemplazamos.
+    // Quitamos handlers previos para evitar dobles toggles.
+    $hamburger.off('click').on('click', function (e) {
+        e.preventDefault();
+        toggleSidebar();
+    });
+    $bottomToggle.off('click').on('click', function (e) {
+        e.preventDefault();
+        toggleSidebar();
+    });
+
+    // Click en el backdrop cierra el sidebar
+    $backdrop.on('click', hideSidebar);
+
+    // En mobile, click en un link del sidebar cierra el sidebar después de navegar
+    $sidebar.on('click', 'a.nav-link[href]:not([href="#"])', function () {
+        if (isMobile()) hideSidebar();
+    });
+
+    // Si redimensionan la ventana hacia desktop, sacamos el backdrop
+    var resizeTimer;
+    $(window).on('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            if (!isMobile()) {
+                $backdrop.removeClass('show');
+                $('body').css('overflow', '');
+            }
+        }, 150);
+    });
 });
 
 // Helper: formatear moneda en pesos
