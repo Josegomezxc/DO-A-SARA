@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menú / Productos{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Menú</li>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'products/css/product_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera del menú">
+    <h1><i class="fas fa-utensils"></i> Menú del local</h1>
+    <p class="lead">Productos que aparecen en el punto de venta. Click en una fila para ver el detalle.</p>
+    <div class="hero-actions">
+        <a href="{% url 'products:product_create' %}" class="btn">
+            <i class="fas fa-plus-circle"></i> Nuevo producto
+        </a>
+        <a href="{% url 'products:category_list' %}" class="btn btn-ghost">
+            <i class="fas fa-tags"></i> Ver categorías
+        </a>
+    </div>
+</section>
+
+{# Filtros en una sola línea #}
+<div class="card modern-card mb-4">
+    <div class="card-body py-3">
+        <form method="get" id="productFilterForm" class="filter-inline" role="search">
+            <div class="input-group filter-search-input">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                </div>
+                <input type="search" name="q" id="q-input" value="{{ q }}"
+                       class="form-control border-left-0"
+                       placeholder="Buscar producto..." autocomplete="off">
+            </div>
+            <select name="categoria" class="form-control filter-auto filter-select-cat" aria-label="Categoría">
+                <option value="">Todas las categorías</option>
+                {% for c in categorias %}<option value="{{ c.pk }}" {% if cat == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+            </select>
+            <select name="estado" class="form-control filter-auto filter-select-estado" aria-label="Estado">
+                <option value="">Estado: todos</option>
+                <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+                <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+            </select>
+            <noscript>
+                <button class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            </noscript>
+        </form>
+    </div>
+</div>
+
+{# Tabla de productos #}
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0">
+            <i class="fas fa-list text-primary"></i> Productos del menú
+        </h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle product-table">
+                <thead class="thead-light">
+                    <tr>
+                        <th class="col-foto">Foto</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th class="text-right col-precio">Precio</th>
+                        <th class="text-center col-estado">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr class="product-row"
+                        data-id="{{ p.id }}"
+                        data-nombre="{{ p.nombre }}"
+                        data-descripcion="{{ p.descripcion|default:'' }}"
+                        data-precio="{{ p.precio|stringformat:'s' }}"
+                        data-categoria="{{ p.categoria.nombre }}"
+                        data-categoria-color="{{ p.categoria.color }}"
+                        data-activo="{{ p.activo|yesno:'1,0' }}"
+                        data-imagen="{% if p.imagen %}{{ p.imagen.url }}{% endif %}"
+                        data-edit-url="{% url 'products:product_update' p.pk %}"
+                        data-delete-url="{% url 'products:product_delete' p.pk %}"
+                        data-activate-url="{% url 'products:product_activate' p.pk %}"
+                        tabindex="0">
+                        <td>
+                            {% if p.imagen %}
+                                <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}" class="product-thumb">
+                            {% else %}
+                                <div class="product-thumb product-thumb-empty d-flex align-items-center justify-content-center"
+                                     data-color="{{ p.categoria.color }}">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ p.nombre }}</strong>
+                            {% if p.descripcion %}
+                            <small class="d-block text-muted">{{ p.descripcion|truncatechars:80 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge category-badge" data-color="{{ p.categoria.color }}">
+                                {{ p.categoria.nombre }}
+                            </span>
+                        </td>
+                        <td class="text-right font-weight-bold text-warning">${{ p.precio|floatformat:2 }}</td>
+                        <td class="text-center">
+                            {% if p.activo %}
+                                <span class="badge badge-success">Activo</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-5">
+                        <i class="fas fa-box fa-3x d-block mb-2"></i>
+                        No hay productos cargados todavía.
+                        <a href="{% url 'products:product_create' %}">Cargá el primero</a>.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+
+{# Modal de detalle del producto #}
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold" id="productModalLabel">
+                    <i class="fas fa-utensils"></i> Detalle del producto
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3" id="modal-image-wrap"></div>
+                <h4 class="mb-1" id="modal-nombre"></h4>
+                <span class="badge mb-3" id="modal-categoria"></span>
+                <p class="text-muted mb-3" id="modal-descripcion"></p>
+                <div class="d-flex justify-content-between align-items-center bg-light rounded p-3">
+                    <div>
+                        <div class="small text-muted text-uppercase">Precio de venta</div>
+                        <div class="h3 mb-0 text-warning font-weight-bold" id="modal-precio"></div>
+                    </div>
+                    <div>
+                        <div class="small text-muted text-uppercase">Estado</div>
+                        <div id="modal-estado"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a href="#" id="modal-btn-editar" class="btn btn-primary">
+                    <i class="fas fa-pencil-alt"></i> Editar
+                </a>
+                <a href="#" id="modal-btn-desactivar" class="btn btn-outline-danger">
+                    <i class="fas fa-toggle-off"></i> Desactivar
+                </a>
+                <form method="post" action="" id="modal-form-activar" class="m-0 d-none">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-toggle-on"></i> Reactivar
+                    </button>
+                </form>
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'products/js/product_list.js' %}"></script>
+{% endblock %}

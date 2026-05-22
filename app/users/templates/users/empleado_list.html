@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Empleados{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Empleados</li>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'users/css/empleado_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de empleados">
+    <h1><i class="fas fa-users"></i> Empleados y usuarios</h1>
+    <p class="lead">Administrá quién tiene acceso al sistema y con qué rol.</p>
+    <div class="hero-actions">
+        <a href="{% url 'users:empleado_create' %}" class="btn">
+            <i class="fas fa-user-plus"></i> Nuevo usuario
+        </a>
+    </div>
+</section>
+
+<div class="card modern-card mb-4">
+    <div class="card-body py-3">
+        <form method="get" id="empleadoFilterForm" class="empleado-filter-form" role="search">
+            <div class="input-group filter-q">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                </div>
+                <input type="search" name="q" id="q-input" value="{{ q }}"
+                       class="form-control border-left-0"
+                       placeholder="Nombre, usuario..." autocomplete="off">
+            </div>
+            <select name="rol" class="form-control filter-auto filter-rol" aria-label="Rol">
+                <option value="">Rol: todos</option>
+                {% for k, v in roles %}<option value="{{ k }}" {% if k == rol %}selected{% endif %}>{{ v }}</option>{% endfor %}
+            </select>
+            <select name="estado" class="form-control filter-auto filter-estado" aria-label="Estado">
+                <option value="">Estado: todos</option>
+                <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+                <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+            </select>
+            <noscript>
+                <button class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            </noscript>
+        </form>
+    </div>
+</div>
+
+<div class="card modern-card mb-4">
+    <div class="card-header"><h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Listado</h2></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Usuario</th>
+                        <th class="d-none d-md-table-cell">Nombre completo</th>
+                        <th class="d-none d-lg-table-cell">Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in empleados %}
+                    <tr>
+                        <td>
+                            <i class="fas fa-user-circle text-muted"></i> {{ emp.username }}
+                            <small class="d-block d-md-none text-muted">{{ emp.get_full_name|default:emp.email|default:"" }}</small>
+                        </td>
+                        <td class="d-none d-md-table-cell">{{ emp.get_full_name|default:"-" }}</td>
+                        <td class="d-none d-lg-table-cell">{{ emp.email|default:"-" }}</td>
+                        <td>
+                            {% if emp.profile.es_admin %}<span class="badge badge-primary">Administrador</span>
+                            {% else %}<span class="badge badge-secondary">Empleado</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if emp.is_active %}<span class="badge badge-success">Activo</span>
+                            {% else %}<span class="badge badge-danger">Inactivo</span>{% endif %}
+                        </td>
+                        <td class="text-right text-nowrap">
+                            <a href="{% url 'users:empleado_update' emp.pk %}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fas fa-pencil-alt"></i></a>
+                            {% if emp.pk != user.pk %}
+                                {% if emp.is_active %}
+                                    <a href="{% url 'users:empleado_delete' emp.pk %}" class="btn btn-sm btn-outline-warning" title="Desactivar"><i class="fas fa-user-slash"></i></a>
+                                {% else %}
+                                    <form method="post" action="{% url 'users:empleado_activate' emp.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-success" title="Reactivar"><i class="fas fa-user-check"></i></button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin empleados</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'users/js/empleado_list.js' %}"></script>
+{% endblock %}

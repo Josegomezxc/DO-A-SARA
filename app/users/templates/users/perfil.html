@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi perfil{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Mi perfil</li>{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera del perfil">
+    <h1><i class="fas fa-user-circle"></i> Mi perfil</h1>
+    <p class="lead">Actualizá tu información de contacto.</p>
+</section>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card modern-card mb-4">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-id-badge text-primary"></i> Datos personales</h2>
+            </div>
+            <div class="card-body">
+                <div class="profile-meta mb-3">
+                    <div class="profile-meta-item">
+                        <small>Usuario</small>
+                        <strong>{{ user.username }}</strong>
+                    </div>
+                    <div class="profile-meta-item">
+                        <small>Rol</small>
+                        {% if profile.es_admin %}<span class="badge badge-primary">Administrador</span>
+                        {% else %}<span class="badge badge-secondary">Empleado</span>{% endif %}
+                    </div>
+                </div>
+                <hr>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="form-row">
+                        {% for field in form %}
+                        <div class="form-group col-md-6">
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check mt-md-4">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                            {% else %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            {% endif %}
+                            {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                            {% if field.errors %}<small class="text-danger d-block">{{ field.errors|join:", " }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-action-primary mt-2">
+                        <i class="fas fa-save"></i> Guardar cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

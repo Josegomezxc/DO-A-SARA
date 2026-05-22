@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Desactivar categoría{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'products:category_list' %}">Categorías</a></li>
+<li class="breadcrumb-item active">Desactivar</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card confirm-delete-card mt-4">
+            <div class="card-body text-center p-4 p-md-5">
+                <div class="icon-bubble">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h1 class="h4 mb-2">¿Desactivar la categoría "{{ object.nombre }}"?</h1>
+                <p class="text-muted mb-4">
+                    La categoría y sus <strong>{{ object.productos.count }} productos</strong> se desactivarán
+                    y dejarán de aparecer en el POS. Las ventas históricas se conservan.
+                </p>
+                <form method="post" class="d-flex justify-content-center" style="gap: 0.5rem;">
+                    {% csrf_token %}
+                    <a href="{% url 'products:category_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-toggle-off"></i> Sí, desactivar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

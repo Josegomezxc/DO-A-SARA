@@ -1,0 +1,34 @@
+/* ============================================================
+   products/_variables.css
+   Variables específicas del módulo de productos (listados,
+   modal de detalle, categorías). Reutilizan las variables
+   globales (--brand, --brand-deep, etc) definidas en
+   users/_variables.css.
+   No agregar reglas con selectores acá: sólo variables.
+============================================================ */
+
+:root {
+  /* ---------- Listado de productos (tabla + modal) ---------- */
+  --product-thumb-size:     56px;
+  --product-thumb-radius:   8px;
+  --product-row-hover-bg:   #fff5e6;
+  --product-row-focus-ring: #2563EB;
+
+  /* Modal de detalle del producto */
+  --product-modal-badge-fs:    0.85rem;
+  --product-modal-badge-pad:   0.4em 0.7em;
+
+  /* Filtros en línea */
+  --filter-gap:                0.5rem;
+  --filter-search-min:         220px;
+  --filter-search-max:         420px;
+  --filter-select-cat-min:     180px;
+  --filter-select-estado-min:  160px;
+
+  /* ---------- Listado de categorías ---------- */
+  --cat-icon-size:    42px;
+  --cat-icon-radius:  10px;
+  --cat-icon-shadow:  0 2px 6px rgba(0, 0, 0, 0.12);
+  --cat-icon-color:   #ffffff;
+  --cat-icon-fs:      1.1rem;
+}

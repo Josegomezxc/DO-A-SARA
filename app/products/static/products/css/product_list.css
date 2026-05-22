@@ -1,0 +1,69 @@
+/* ============================================================
+   Estilos del listado de productos
+   - Tabla con filas clickeables
+   - Modal de detalle del producto
+   - Filtros en línea horizontal
+============================================================ */
+
+@import url('_variables.css');
+
+/* Filtros en una sola línea (mobile-first: wrap natural en pantallas chicas) */
+.filter-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--filter-gap);
+}
+
+.filter-inline .filter-search-input {
+  flex: 1 1 var(--filter-search-min);
+  max-width: var(--filter-search-max);
+  min-width: var(--filter-search-min);
+}
+
+.filter-inline .filter-select-cat {
+  width: auto;
+  min-width: var(--filter-select-cat-min);
+  margin-left: auto;
+}
+
+.filter-inline .filter-select-estado {
+  width: auto;
+  min-width: var(--filter-select-estado-min);
+}
+
+/* Tabla */
+.product-table .col-foto   { width: 70px; }
+.product-table .col-precio { width: 120px; }
+.product-table .col-estado { width: 110px; }
+
+.product-row { cursor: pointer; }
+
+.product-table tbody tr:hover {
+  background-color: var(--product-row-hover-bg);
+}
+
+.product-table tbody tr:focus {
+  outline: 2px solid var(--product-row-focus-ring);
+  outline-offset: -2px;
+}
+
+.product-thumb {
+  width: var(--product-thumb-size);
+  height: var(--product-thumb-size);
+  border-radius: var(--product-thumb-radius);
+  object-fit: cover;
+  font-size: 1.2rem;
+}
+
+/* El color de fondo del thumb vacío lo aplica el JS (data-color) */
+.product-thumb-empty {
+  background-color: #f0f0f0;
+  color: #888;
+}
+
+/* Asegurar que el badge de categoría tenga color visible en el modal */
+#productModal .modal-body .badge {
+  font-size: var(--product-modal-badge-fs);
+  padding: var(--product-modal-badge-pad);
+}

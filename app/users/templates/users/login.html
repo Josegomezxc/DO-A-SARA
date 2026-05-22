@@ -1,0 +1,117 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="description" content="Acceso al sistema {{ NEGOCIO_NOMBRE }}">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Iniciar sesión - {{ NEGOCIO_NOMBRE }}</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='11' fill='%232563EB'/><text x='12' y='17' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='14' fill='white'>DS</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="{% static 'sb-admin-2/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="{% static 'sb-admin-2/css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'users/css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'users/css/login.css' %}" rel="stylesheet">
+</head>
+
+<body class="login-body">
+
+    <main class="login-container" role="main">
+        <article class="login-card">
+
+            {# Panel izquierdo: branding #}
+            <aside class="login-brand" aria-hidden="true">
+                <div class="brand-orbits">
+                    <span class="orbit orbit-1"></span>
+                    <span class="orbit orbit-2"></span>
+                    <span class="orbit orbit-3"></span>
+                </div>
+                <div class="brand-content">
+                    <div class="brand-logo">
+                        <i class="fas fa-hamburger"></i>
+                    </div>
+                    <h1 class="brand-title">{{ NEGOCIO_NOMBRE }}</h1>
+                    <p class="brand-sub">Papas y hamburguesas · Sistema POS</p>
+                    <div class="brand-features">
+                        <div class="brand-feature">
+                            <i class="fas fa-bolt"></i>
+                            <span>Pedidos rápidos</span>
+                        </div>
+                        <div class="brand-feature">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Reportes en vivo</span>
+                        </div>
+                        <div class="brand-feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Acceso seguro por rol</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {# Panel derecho: form #}
+            <section class="login-form-panel" aria-label="Inicio de sesión">
+                <div class="login-form-wrap">
+                    <div class="text-center mb-4">
+                        <h2 class="login-welcome">¡Bienvenido/a!</h2>
+                        <p class="login-welcome-sub">Ingresá con tu usuario para continuar.</p>
+                    </div>
+
+                    {% if form.errors %}
+                        <div class="login-alert login-alert-error" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Usuario o contraseña incorrectos.
+                        </div>
+                    {% endif %}
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="login-alert login-alert-{{ message.tags }}" role="status">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate aria-label="Formulario de inicio de sesión">
+                        {% csrf_token %}
+                        <div class="login-field">
+                            <label for="id_username" class="login-label">Usuario</label>
+                            <div class="login-input-wrap">
+                                <i class="fas fa-user login-input-icon" aria-hidden="true"></i>
+                                <input type="text" name="username" id="id_username"
+                                       class="login-input" placeholder="tu usuario" required autofocus autocomplete="username"
+                                       value="{{ form.username.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="login-field">
+                            <label for="id_password" class="login-label">Contraseña</label>
+                            <div class="login-input-wrap">
+                                <i class="fas fa-lock login-input-icon" aria-hidden="true"></i>
+                                <input type="password" name="password" id="id_password"
+                                       class="login-input" placeholder="••••••••" required autocomplete="current-password">
+                            </div>
+                        </div>
+                        <button type="submit" class="login-submit">
+                            <i class="fas fa-sign-in-alt"></i> Ingresar
+                        </button>
+                    </form>
+
+                    <hr class="login-divider">
+                    <p class="login-foot">
+                        <i class="fas fa-shield-alt"></i> Sistema interno · sólo personal autorizado
+                    </p>
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <script src="{% static 'sb-admin-2/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'sb-admin-2/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} producto{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Menú</a></li>
+<li class="breadcrumb-item active">{% if object %}Editar{% else %}Nuevo{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera del formulario">
+    <h1>
+        <i class="fas fa-utensils"></i>
+        {% if object %}Editar producto{% else %}Nuevo producto{% endif %}
+    </h1>
+    <p class="lead">{% if object %}Actualizá los datos del producto del menú.{% else %}Cargá un producto nuevo al menú del local.{% endif %}</p>
+    <div class="hero-actions">
+        <a href="{% url 'products:product_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver al menú
+        </a>
+    </div>
+</section>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card modern-card mb-4">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-info-circle text-primary"></i> Información del producto</h2>
+            </div>
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors|join:", " }}</div>
+                    {% endif %}
+                    <div class="form-row">
+                        {% for field in form %}
+                        <div class="form-group col-md-{% if field.name == 'descripcion' or field.name == 'imagen' %}12{% else %}6{% endif %}">
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check mt-md-4">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                            {% else %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            {% endif %}
+                            {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                            {% if field.errors %}<small class="text-danger d-block">{{ field.errors|join:", " }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between">
+                    <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-action-primary">
+                        <i class="fas fa-save"></i> Guardar producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+/* ============================================================
+   Estilos específicos del listado de categorías
+============================================================ */
+
+@import url('_variables.css');
+
+.cat-icon {
+  width: var(--cat-icon-size);
+  height: var(--cat-icon-size);
+  border-radius: var(--cat-icon-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cat-icon-color);
+  font-size: var(--cat-icon-fs);
+  flex-shrink: 0;
+  box-shadow: var(--cat-icon-shadow);
+}

@@ -1,0 +1,161 @@
+# ============================================================
+# .gitignore — Proyecto Doña Sara (Django POS)
+# ============================================================
+
+# ────────────────────────────────────────────────
+# Secretos / configuración sensible
+# ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+credentials.json
+secrets.json
+*.secret
+local_settings.py
+
+# ────────────────────────────────────────────────
+# Python
+# ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# ────────────────────────────────────────────────
+# Virtualenvs (incluye la del proyecto: ent_fact)
+# ────────────────────────────────────────────────
+ent_fact/
+venv/
+env/
+ENV/
+.venv/
+.virtualenv/
+pyvenv.cfg
+
+# ────────────────────────────────────────────────
+# Django
+# ────────────────────────────────────────────────
+*.log
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Archivos generados por collectstatic (NO los static por app, esos sí van al repo)
+/staticfiles/
+/static_collected/
+
+# Media uploads (fotos de productos, avatares, etc.)
+/media/
+
+# Cache de templates / sesiones locales
+*.bak
+.session
+
+# ────────────────────────────────────────────────
+# Migraciones huérfanas (NO ignorar las migraciones reales,
+# pero sí ignorar archivos temporales/locales generados por Django)
+# ────────────────────────────────────────────────
+# Las migraciones del proyecto SÍ deben ir al repo.
+# Si querés ignorar migraciones por desarrollo local, descomentá:
+# app/*/migrations/0*.py
+# !app/*/migrations/__init__.py
+
+# ────────────────────────────────────────────────
+# Coverage / tests
+# ────────────────────────────────────────────────
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# ────────────────────────────────────────────────
+# IDEs / editores
+# ────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+.ropeproject
+
+# ────────────────────────────────────────────────
+# Asistentes de IA / herramientas locales
+# ────────────────────────────────────────────────
+.claude/
+.cursor/
+.aider*
+.copilot/
+
+# ────────────────────────────────────────────────
+# Sistema operativo
+# ────────────────────────────────────────────────
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+*.lnk
+$RECYCLE.BIN/
+[Dd]esktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# ────────────────────────────────────────────────
+# Node / frontend tooling (por si lo agregás más adelante)
+# ────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# ────────────────────────────────────────────────
+# Backups y archivos temporales
+# ────────────────────────────────────────────────
+*.tmp
+*.temp
+*.old
+*.orig
+*~
+.backup/
+backup/

@@ -1,0 +1,62 @@
+/* ============================================================
+   orders/_variables.css
+   Variables específicas del módulo de pedidos (POS, carrito,
+   ticket impreso, detalle de pedido). Reutilizan las variables
+   globales (--brand, --brand-deep, etc) definidas en users/_variables.css.
+   No agregar reglas con selectores acá: sólo variables.
+============================================================ */
+
+:root {
+  /* ---------- POS (Punto de venta) ---------- */
+  --pos-hero-radius:    14px;
+  --pos-hero-padding:   1.5rem;
+  --pos-hero-padding-md: 2rem;
+  --pos-card-radius:    14px;
+
+  /* Step indicators (1 → 2 → 3) */
+  --pos-step-size:        34px;
+  --pos-step-bg:          #e3e6f0;
+  --pos-step-text:        #6c757d;
+  --pos-step-active-bg:   #2563EB;       /* var(--brand) */
+  --pos-step-active-ring: rgba(37, 99, 235, 0.18);
+  --pos-step-done-bg:     #1cc88a;       /* var(--color-success) */
+  --pos-step-line-color:  #e3e6f0;
+  --pos-step-line-done:   #1cc88a;
+
+  /* Botón "Agregar al pedido" + "Guardar pedido" (verde gradient) */
+  --pos-btn-success-from: #22c55e;
+  --pos-btn-success-to:   #16a34a;
+  --pos-btn-success-shadow: rgba(34, 197, 94, 0.35);
+
+  /* Botón "Imprimir factura" (azul gradient) */
+  --pos-btn-print-from:  #2563EB;
+  --pos-btn-print-to:    #1E3A8A;
+  --pos-btn-print-shadow: rgba(37, 99, 235, 0.35);
+
+  /* Tabla del carrito */
+  --pos-row-hover-bg:    #f8fbff;
+  --pos-row-border:      #f1f3f9;
+  --pos-thead-bg:        #fafbfd;
+  --pos-thead-border:    #e3e6f0;
+
+  /* Input de cantidad */
+  --pos-qty-input-width: 80px;
+  --pos-qty-input-radius: 8px;
+
+  /* ---------- Detalle de pedido ---------- */
+  --order-detail-total-bg: rgba(37, 99, 235, 0.08);
+
+  /* ---------- Listado de pedidos ---------- */
+  --order-filter-gap: 0.5rem;
+
+  /* ---------- Ticket impreso ---------- */
+  --tk-brand:       #2563EB;
+  --tk-brand-deep:  #1E3A8A;
+  --tk-paper:       #ffffff;
+  --tk-bg:          #f3f4f6;
+  --tk-text:        #1f2937;
+  --tk-muted:       #6b7280;
+  --tk-width:       320px;
+  --tk-print-width: 80mm;
+  --tk-radius:      12px;
+}

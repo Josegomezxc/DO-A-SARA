@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - {{ NEGOCIO_NOMBRE }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'users/css/dashboard_admin.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{# Hero #}
+<section class="page-hero" aria-label="Cabecera del dashboard">
+    <h1><i class="fas fa-store"></i> Panel de administración</h1>
+    <p class="lead">Resumen general del local · {% now "l j F Y" %}</p>
+    <div class="hero-actions">
+        <a href="{% url 'orders:pos' %}" class="btn">
+            <i class="fas fa-cash-register"></i> Tomar pedido
+        </a>
+        <a href="{% url 'products:product_create' %}" class="btn btn-ghost">
+            <i class="fas fa-plus-circle"></i> Nuevo producto
+        </a>
+    </div>
+</section>
+
+{# 3 métricas principales de ventas #}
+<h2 class="section-heading">Ventas</h2>
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="stat-card stat-success">
+            <i class="fas fa-dollar-sign stat-icon" aria-hidden="true"></i>
+            <div class="stat-label">Ventas hoy</div>
+            <div class="stat-number">${{ ventas_hoy_total|floatformat:2 }}</div>
+            <div class="stat-foot">{{ ventas_hoy_cantidad }} pedidos completados</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="stat-card stat-info">
+            <i class="fas fa-calendar-week stat-icon" aria-hidden="true"></i>
+            <div class="stat-label">Esta semana</div>
+            <div class="stat-number">${{ ventas_semana_total|floatformat:2 }}</div>
+            <div class="stat-foot">{{ ventas_semana_cantidad }} pedidos</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="stat-card stat-primary">
+            <i class="fas fa-chart-line stat-icon" aria-hidden="true"></i>
+            <div class="stat-label">Este mes</div>
+            <div class="stat-number">${{ ventas_mes_total|floatformat:2 }}</div>
+            <div class="stat-foot">{{ ventas_mes_cantidad }} pedidos</div>
+        </div>
+    </div>
+</div>
+
+{# Accesos rápidos #}
+<h2 class="section-heading">Atajos</h2>
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <a href="{% url 'products:product_list' %}" class="quick-action qa-blue">
+            <div class="qa-icon"><i class="fas fa-utensils"></i></div>
+            <div class="qa-title">{{ productos_activos }} productos</div>
+            <p class="qa-sub">en el menú activo</p>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{% url 'users:empleado_list' %}" class="quick-action qa-purple">
+            <div class="qa-icon"><i class="fas fa-users"></i></div>
+            <div class="qa-title">{{ empleados_activos }} empleados</div>
+            <p class="qa-sub">activos en el sistema</p>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <a href="{% url 'orders:order_list' %}?estado=pendiente" class="quick-action qa-orange">
+            <div class="qa-icon"><i class="fas fa-receipt"></i></div>
+            <div class="qa-title">{{ pedidos_pendientes }} pendientes</div>
+            <p class="qa-sub">por completar</p>
+        </a>
+    </div>
+</div>
+
+{# Gráficos #}
+<h2 class="section-heading">Análisis</h2>
+<div class="row">
+    <div class="col-xl-7 col-lg-7 mb-4">
+        <div class="card modern-card chart-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0">
+                    <i class="fas fa-chart-line text-primary"></i> Ventas por día (últimos 7 días)
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="chart-ventas-dias" role="img" aria-label="Gráfico de líneas con las ventas de los últimos 7 días"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-5 col-lg-5 mb-4">
+        <div class="card modern-card chart-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0">
+                    <i class="fas fa-chart-pie text-primary"></i> Ventas por categoría del mes
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie">
+                    <canvas id="chart-ventas-categorias" role="img" aria-label="Gráfico circular con las ventas por categoría del mes"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Top productos del mes + últimos pedidos #}
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0">
+                    <i class="fas fa-trophy text-warning"></i> Top 5 productos del mes
+                </h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>Producto</th>
+                                <th class="text-right" style="width:80px;">Cant.</th>
+                                <th class="text-right">Ingresos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_productos %}
+                            <tr>
+                                <td><strong class="text-primary">#{{ forloop.counter }}</strong></td>
+                                <td>{{ p.producto__nombre }}</td>
+                                <td class="text-right">{{ p.cantidad|floatformat:0 }}</td>
+                                <td class="text-right font-weight-bold">${{ p.ingresos|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">
+                                Sin ventas todavía este mes.
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h6 m-0">
+                    <i class="fas fa-history text-primary"></i> Últimos pedidos
+                </h2>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th class="d-none d-md-table-cell">Vendedor</th>
+                                <th>Estado</th>
+                                <th class="text-right">Total</th>
+                                <th class="d-none d-sm-table-cell">Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in ultimos_pedidos %}
+                            <tr>
+                                <td><a href="{{ p.get_absolute_url }}" class="font-weight-bold">{{ p.numero }}</a></td>
+                                <td class="d-none d-md-table-cell">{{ p.vendedor.username }}</td>
+                                <td>
+                                    {% if p.estado == 'completado' %}<span class="badge badge-success">Completado</span>
+                                    {% elif p.estado == 'pendiente' %}<span class="badge badge-warning">Pendiente</span>
+                                    {% else %}<span class="badge badge-secondary">Cancelado</span>{% endif %}
+                                </td>
+                                <td class="text-right font-weight-bold">${{ p.total|floatformat:2 }}</td>
+                                <td class="d-none d-sm-table-cell"><small class="text-muted">{{ p.creado|date:"d/m H:i" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">
+                                Sin pedidos todavía. <a href="{% url 'orders:pos' %}">Tomá el primero</a>.
+                            </td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Datos para los gráficos #}
+{{ chart_data|json_script:"dashboard-chart-data" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'sb-admin-2/vendor/chart.js/Chart.min.js' %}"></script>
+<script src="{% static 'users/js/dashboard_admin.js' %}"></script>
+{% endblock %}

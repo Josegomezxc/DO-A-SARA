@@ -1,0 +1,70 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ticket {{ pedido.numero }}</title>
+    <link rel="stylesheet" href="{% static 'sb-admin-2/vendor/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'orders/css/ticket.css' %}">
+</head>
+<body>
+    <button type="button" class="print no-print">
+        <i class="fas fa-print" aria-hidden="true"></i> Imprimir ticket
+    </button>
+
+    <section class="ticket" aria-label="Ticket de compra">
+        <h2 class="brand">DOÑA SARA</h2>
+        <p class="small brand-sub">Papas y hamburguesas</p>
+        <hr>
+        <div class="row small">
+            <span>Ticket:</span> <strong>{{ pedido.numero }}</strong>
+        </div>
+        <div class="row small">
+            <span>Fecha:</span> <span>{{ pedido.creado|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="row small">
+            <span>Vendedor:</span> <span>{{ pedido.vendedor.username }}</span>
+        </div>
+        {% if pedido.cliente %}
+        <div class="row small"><span>Cliente:</span> <span>{{ pedido.cliente }}</span></div>
+        {% endif %}
+        <hr>
+        <table>
+            {% for item in pedido.items.all %}
+            <tr>
+                <td>{{ item.producto.nombre|truncatechars:24 }}</td>
+            </tr>
+            <tr>
+                <td class="qty">{{ item.cantidad|floatformat:2 }} x ${{ item.precio_unitario|floatformat:0 }}</td>
+                <td class="subt">${{ item.subtotal|floatformat:0 }}</td>
+            </tr>
+            {% if item.nota %}<tr><td colspan="2" class="small">  + {{ item.nota }}</td></tr>{% endif %}
+            {% endfor %}
+        </table>
+        <hr>
+        <div class="row">
+            <span>Subtotal:</span> <span>${{ pedido.subtotal|floatformat:2 }}</span>
+        </div>
+        {% if pedido.descuento %}
+        <div class="row">
+            <span>Descuento:</span> <span>-${{ pedido.descuento|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        <hr>
+        <div class="row total">
+            <span>TOTAL:</span> <span>${{ pedido.total|floatformat:2 }}</span>
+        </div>
+        <div class="row small mt-2">
+            <span>Pago:</span> <span>{{ pedido.get_metodo_pago_display }}</span>
+        </div>
+        {% if pedido.notas %}
+        <hr>
+        <p class="small"><i class="fas fa-sticky-note" aria-hidden="true"></i> {{ pedido.notas }}</p>
+        {% endif %}
+        <hr>
+        <p class="small center">¡Gracias por tu compra!</p>
+    </section>
+
+    <script src="{% static 'orders/js/ticket.js' %}"></script>
+</body>
+</html>

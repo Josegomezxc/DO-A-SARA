@@ -1,0 +1,27 @@
+/* ============================================================
+   Dashboard admin — layout de los gráficos
+============================================================ */
+
+@import url('_variables.css');
+
+.chart-card .card-body {
+  position: relative;
+}
+
+.chart-area {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.chart-pie {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+/* Tablet+: gráficos un poco más altos */
+@media (min-width: 768px) {
+  .chart-area { height: 320px; }
+  .chart-pie  { height: 300px; }
+}

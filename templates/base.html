@@ -1,0 +1,336 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    {# Meta básicos #}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#2563EB">
+
+    {# SEO (sistema interno: noindex) #}
+    <meta name="description" content="{% block meta_description %}Sistema de gestión interno de {{ NEGOCIO_NOMBRE }} — punto de venta para hamburguesas y salchipapas.{% endblock %}">
+    <meta name="author" content="{{ NEGOCIO_NOMBRE }}">
+    <meta name="robots" content="noindex, nofollow">
+
+    {# Open Graph para previews en mensajería interna #}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}{{ NEGOCIO_NOMBRE }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Sistema POS de {{ NEGOCIO_NOMBRE }}.{% endblock %}">
+
+    <title>{% block title %}{{ NEGOCIO_NOMBRE }}{% endblock %}</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='11' fill='%232563EB'/><text x='12' y='17' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='14' fill='white'>DS</text></svg>">
+
+    {# Preconnect a Google Fonts para acelerar el primer paint #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    {# Assets — style.css importa _variables.css con @import, no hace falta enlazar variables.css aparte #}
+    <link href="{% static 'sb-admin-2/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="{% static 'sb-admin-2/css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body id="page-top">
+
+{# Skip link — sólo visible al recibir focus por teclado (accesibilidad) #}
+<a href="#content" class="skip-link">Saltar al contenido</a>
+
+{% if user.is_authenticated %}
+<div id="wrapper">
+
+    {# Sidebar semántico — aside con navegación principal #}
+    <aside aria-label="Menú lateral">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'users:dashboard' %}" aria-label="Ir al dashboard de {{ NEGOCIO_NOMBRE }}">
+                <div class="sidebar-brand-icon rotate-n-15" aria-hidden="true">
+                    <i class="fas fa-hamburger"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Doña Sara</div>
+            </a>
+
+            <hr class="sidebar-divider my-0">
+
+            {% with current_url=request.resolver_match.url_name current_ns=request.resolver_match.namespace %}
+            {# Nav empleado: 3 módulos básicos #}
+            <li class="nav-item {% if current_url == 'dashboard' %}active{% endif %}">
+                <a class="nav-link" href="{% url 'users:dashboard' %}" {% if current_url == 'dashboard' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-tachometer-alt" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if current_ns == 'orders' and current_url == 'pos' %}active{% endif %}">
+                <a class="nav-link" href="{% url 'orders:pos' %}" {% if current_ns == 'orders' and current_url == 'pos' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-cash-register" aria-hidden="true"></i>
+                    <span>Tomar pedido</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if current_ns == 'orders' and current_url == 'order_list' %}active{% endif %}">
+                <a class="nav-link" href="{% url 'orders:order_list' %}" {% if current_ns == 'orders' and current_url == 'order_list' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-receipt" aria-hidden="true"></i>
+                    <span>Lista de pedidos</span>
+                </a>
+            </li>
+
+            {% if user.is_superuser or user.profile.es_admin %}
+            {# Nav admin: 3 módulos extra #}
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Administración</div>
+
+            <li class="nav-item {% if current_ns == 'products' and 'product' in current_url %}active{% endif %}">
+                <a class="nav-link" href="{% url 'products:product_list' %}" {% if current_ns == 'products' and 'product' in current_url %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-utensils" aria-hidden="true"></i>
+                    <span>Menú / Productos</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if current_ns == 'products' and 'category' in current_url %}active{% endif %}">
+                <a class="nav-link" href="{% url 'products:category_list' %}" {% if current_ns == 'products' and 'category' in current_url %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-tags" aria-hidden="true"></i>
+                    <span>Categorías</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if current_ns == 'users' and 'empleado' in current_url %}active{% endif %}">
+                <a class="nav-link" href="{% url 'users:empleado_list' %}" {% if current_ns == 'users' and 'empleado' in current_url %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-users" aria-hidden="true"></i>
+                    <span>Empleados</span>
+                </a>
+            </li>
+            {% endif %}
+            {% endwith %}
+
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle" type="button" aria-label="Colapsar/expandir menú lateral"></button>
+            </div>
+        </ul>
+    </aside>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        {# Contenido principal — main es el landmark principal #}
+        <main id="content" role="main">
+
+            {# Topbar — header con barra superior #}
+            <header class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow" role="banner">
+
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button" aria-label="Abrir menú">
+                    <i class="fa fa-bars" aria-hidden="true"></i>
+                </button>
+
+                {# Buscador global — manda al listado de productos por defecto #}
+                <form method="get" action="{% url 'users:buscar' %}"
+                      class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search"
+                      role="search" aria-label="Búsqueda global">
+                    <div class="input-group">
+                        <input type="search" name="q" class="form-control bg-light border-0 small"
+                               placeholder="Buscar..." aria-label="Buscar">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit" aria-label="Ejecutar búsqueda">
+                                <i class="fas fa-search fa-sm" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav ml-auto">
+
+                    {# Buscador en mobile (icono que despliega un input) #}
+                    <li class="nav-item dropdown no-arrow d-sm-none">
+                        <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Buscar">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown">
+                            <form method="get" action="{% url 'users:buscar' %}" class="form-inline mr-auto w-100 navbar-search" role="search">
+                                <div class="input-group">
+                                    <input type="search" name="q" class="form-control bg-light border-0 small"
+                                           placeholder="Buscar..." aria-label="Buscar">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="submit"><i class="fas fa-search fa-sm" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </li>
+
+                    {# Alertas: pedidos pendientes #}
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Alertas">
+                            <i class="fas fa-bell fa-fw" aria-hidden="true"></i>
+                            {% if topbar_alertas_count %}
+                            <span class="badge badge-danger badge-counter">{% if topbar_alertas_count > 9 %}9+{% else %}{{ topbar_alertas_count }}{% endif %}</span>
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
+                            <h3 class="dropdown-header">Centro de alertas</h3>
+                            {% for p in topbar_alertas %}
+                            <a class="dropdown-item d-flex align-items-center" href="{{ p.get_absolute_url }}">
+                                <div class="mr-3">
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-hourglass-half text-white" aria-hidden="true"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500">{{ p.creado|date:"d M Y · H:i" }}</div>
+                                    <span class="font-weight-bold">Pedido {{ p.numero }} pendiente</span>
+                                    <div class="small text-muted">Total: ${{ p.total|floatformat:2 }} · {{ p.vendedor.username }}</div>
+                                </div>
+                            </a>
+                            {% empty %}
+                            <div class="dropdown-item text-center small text-gray-500 py-3">
+                                <i class="fas fa-check-circle text-success" aria-hidden="true"></i>
+                                Sin alertas activas
+                            </div>
+                            {% endfor %}
+                            {% if topbar_alertas_count %}
+                            <a class="dropdown-item text-center small text-gray-500" href="{% url 'orders:order_list' %}?estado=pendiente">
+                                Ver todos los pedidos pendientes
+                            </a>
+                            {% endif %}
+                        </div>
+                    </li>
+
+                    {# Mensajes — placeholder (sin lógica real todavía) #}
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Mensajes">
+                            <i class="fas fa-envelope fa-fw" aria-hidden="true"></i>
+                            {% if topbar_mensajes_count %}
+                            <span class="badge badge-danger badge-counter">{% if topbar_mensajes_count > 9 %}9+{% else %}{{ topbar_mensajes_count }}{% endif %}</span>
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
+                            <h3 class="dropdown-header">Mensajes</h3>
+                            <div class="dropdown-item text-center small text-gray-500 py-3">
+                                <i class="fas fa-inbox text-muted" aria-hidden="true"></i>
+                                No tenés mensajes nuevos
+                            </div>
+                        </div>
+                    </li>
+
+                    <div class="topbar-divider d-none d-sm-block" aria-hidden="true"></div>
+
+                    {# Usuario #}
+                    <li class="nav-item dropdown no-arrow">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Menú de usuario">
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                {{ user.get_full_name|default:user.username }}
+                                <span class="badge badge-warning ml-1">
+                                    {% if user.is_superuser or user.profile.es_admin %}Admin{% else %}Empl.{% endif %}
+                                </span>
+                            </span>
+                            <i class="fas fa-user-circle fa-2x text-gray-400" aria-hidden="true"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{% url 'users:perfil' %}">
+                                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400" aria-hidden="true"></i> Mi perfil
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400" aria-hidden="true"></i> Cerrar sesión
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </header>
+
+            {# Migas de pan debajo del topbar #}
+            <nav aria-label="Migas de pan" class="d-none d-sm-flex container-fluid mb-3">
+                <ol class="breadcrumb bg-transparent mb-0 px-0">
+                    <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Inicio</a></li>
+                    {% block breadcrumb %}{% endblock %}
+                </ol>
+            </nav>
+
+            <div class="container-fluid">
+                {% if messages %}
+                <section aria-label="Mensajes del sistema" aria-live="polite">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar mensaje">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </section>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <footer class="sticky-footer bg-white" role="contentinfo">
+            <div class="container my-auto">
+                <div class="copyright text-center my-auto">
+                    <small>Copyright &copy; {% now "Y" %} {{ NEGOCIO_NOMBRE }} · Sistema de gestión</small>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<a class="scroll-to-top rounded" href="#page-top" aria-label="Volver arriba">
+    <i class="fas fa-angle-up" aria-hidden="true"></i>
+</a>
+
+{# Modal de logout #}
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5 mb-0" id="logoutModalLabel">¿Cerrar sesión?</h2>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">¿Estás seguro que querés cerrar la sesión actual?</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-out-alt fa-sm fa-fw" aria-hidden="true"></i> Cerrar sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+    {% if messages %}
+        <section aria-label="Mensajes del sistema" aria-live="polite">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+    {% block content_anon %}{% block anon_body %}{% endblock %}{% endblock %}
+{% endif %}
+
+{# Bootstrap 4 + jQuery #}
+<script src="{% static 'sb-admin-2/vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'sb-admin-2/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'sb-admin-2/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+<script src="{% static 'sb-admin-2/js/sb-admin-2.min.js' %}"></script>
+
+{# JS propio #}
+<script src="{% static 'users/js/main.js' %}"></script>
+
+{% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

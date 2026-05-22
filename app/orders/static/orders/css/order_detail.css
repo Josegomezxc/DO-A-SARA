@@ -1,0 +1,30 @@
+/* ============================================================
+   order_detail.css — estilos del detalle de pedido
+============================================================ */
+
+@import url('_variables.css');
+
+.order-detail-total td {
+  background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.08) 100%);
+  font-size: 1.1rem;
+  color: var(--brand-deep, #1E3A8A);
+  padding: 1rem !important;
+  border-top: 2px solid #e3e6f0;
+}
+
+.info-dl dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: #6c757d;
+  margin-top: 0.85rem;
+}
+
+.info-dl dt:first-child { margin-top: 0; }
+
+.info-dl dd {
+  margin: 0.2rem 0 0 0;
+  font-weight: 600;
+  color: #2e2f3a;
+}

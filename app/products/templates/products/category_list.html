@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categorías{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'products/css/category_list.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Menú</a></li>
+<li class="breadcrumb-item active">Categorías</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de categorías">
+    <h1><i class="fas fa-tags"></i> Categorías del menú</h1>
+    <p class="lead">Agrupan los productos del POS — Salchipapas, Hamburguesas, Bebidas, etc.</p>
+    <div class="hero-actions">
+        <a href="{% url 'products:category_create' %}" class="btn">
+            <i class="fas fa-plus-circle"></i> Nueva categoría
+        </a>
+        <a href="{% url 'products:product_list' %}" class="btn btn-ghost">
+            <i class="fas fa-utensils"></i> Ver productos
+        </a>
+    </div>
+</section>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Listado de categorías</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th style="width:70px;">#</th>
+                        <th>Categoría</th>
+                        <th class="text-center" style="width:90px;">Productos</th>
+                        <th class="text-center" style="width:90px;">Estado</th>
+                        <th class="text-center" style="width:160px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in categorias %}
+                    <tr>
+                        <td class="text-muted">{{ c.orden }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="cat-icon mr-3" style="background:{{ c.color }};">
+                                    {% if c.icono %}
+                                    <i class="{{ c.icono }}"></i>
+                                    {% else %}
+                                    <i class="fas fa-tag"></i>
+                                    {% endif %}
+                                </span>
+                                <div>
+                                    <strong class="d-block">{{ c.nombre }}</strong>
+                                    {% if c.descripcion %}
+                                    <small class="text-muted">{{ c.descripcion|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-pill badge-light border">{{ c.productos.count }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if c.activa %}
+                            <span class="badge badge-success">Activa</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right text-nowrap">
+                            <a href="{% url 'products:category_update' c.pk %}" class="btn btn-sm btn-outline-primary"
+                                title="Editar">
+                                <i class="fas fa-pencil-alt"></i> Editar
+                            </a>
+                            {% if c.activa %}
+                            <a href="{% url 'products:category_delete' c.pk %}" class="btn btn-sm btn-outline-warning"
+                                title="Desactivar">
+                                <i class="fas fa-toggle-off"></i> Desactivar
+                            </a>
+                            {% else %}
+                            <form method="post" action="{% url 'products:category_activate' c.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Reactivar">
+                                    <i class="fas fa-toggle-on"></i> Reactivar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            Sin categorías. <a href="{% url 'products:category_create' %}">Creá la primera</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+{% endblock %}

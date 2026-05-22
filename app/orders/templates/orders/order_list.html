@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pedidos - {{ NEGOCIO_NOMBRE }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'orders/css/order_list.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Pedidos</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de pedidos">
+    <h1><i class="fas fa-receipt"></i> Pedidos &amp; Ventas</h1>
+    <p class="lead">Historial completo de pedidos. Filtrá por estado, fecha o cliente.</p>
+    <div class="hero-actions">
+        <a href="{% url 'orders:pos' %}" class="btn">
+            <i class="fas fa-plus-circle"></i> Tomar pedido
+        </a>
+    </div>
+</section>
+
+<div class="card modern-card mb-4">
+    <div class="card-body py-3">
+        <form method="get" id="orderFilterForm" class="order-filter-form" role="search">
+            <div class="input-group filter-q">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                </div>
+                <input type="search" name="q" id="q-input" value="{{ q }}"
+                       class="form-control border-left-0"
+                       placeholder="Número, cliente..." autocomplete="off">
+            </div>
+            <select name="estado" class="form-control filter-auto filter-estado" aria-label="Estado">
+                <option value="">Estado: todos</option>
+                {% for k, v in estados %}<option value="{{ k }}" {% if estado == k %}selected{% endif %}>{{ v }}</option>{% endfor %}
+            </select>
+            <input type="date" name="desde" value="{{ desde }}" class="form-control filter-auto filter-fecha" title="Desde" aria-label="Desde">
+            <input type="date" name="hasta" value="{{ hasta }}" class="form-control filter-auto filter-fecha" title="Hasta" aria-label="Hasta">
+            <noscript>
+                <button class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            </noscript>
+        </form>
+    </div>
+</div>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Listado de pedidos</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Número</th>
+                        <th class="d-none d-md-table-cell">Vendedor</th>
+                        <th class="d-none d-md-table-cell">Cliente</th>
+                        <th>Estado</th>
+                        <th class="d-none d-lg-table-cell">Método</th>
+                        <th class="text-right">Total</th>
+                        <th class="d-none d-md-table-cell">Fecha</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr>
+                        <td>
+                            <a href="{{ p.get_absolute_url }}" class="font-weight-bold">{{ p.numero }}</a>
+                            <small class="d-block d-md-none text-muted">
+                                {{ p.vendedor.username }} · {{ p.creado|date:"d/m H:i" }}
+                            </small>
+                        </td>
+                        <td class="d-none d-md-table-cell">{{ p.vendedor.username }}</td>
+                        <td class="d-none d-md-table-cell">{{ p.cliente|default:"-" }}</td>
+                        <td>
+                            {% if p.estado == 'completado' %}<span class="badge badge-success">Completado</span>
+                            {% elif p.estado == 'pendiente' %}<span class="badge badge-warning">Pendiente</span>
+                            {% else %}<span class="badge badge-secondary">Cancelado</span>{% endif %}
+                        </td>
+                        <td class="d-none d-lg-table-cell">{{ p.get_metodo_pago_display }}</td>
+                        <td class="text-right font-weight-bold">${{ p.total|floatformat:2 }}</td>
+                        <td class="d-none d-md-table-cell"><small>{{ p.creado|date:"d/m H:i" }}</small></td>
+                        <td class="text-right text-nowrap">
+                            <a href="{{ p.get_absolute_url }}" class="btn btn-sm btn-outline-primary" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'orders:order_ticket' p.pk %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Ticket">
+                                <i class="fas fa-print"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">No hay pedidos en este rango.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'orders/js/order_list.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pedido {{ pedido.numero }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Pedidos</a></li>
+<li class="breadcrumb-item active">{{ pedido.numero }}</li>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'orders/css/order_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<section class="page-hero" aria-label="Cabecera del pedido">
+    <h1><i class="fas fa-receipt"></i> Pedido {{ pedido.numero }}</h1>
+    <p class="lead">{{ pedido.creado|date:"l j F Y · H:i" }}</p>
+    <div class="hero-actions">
+        <a href="{% url 'orders:order_ticket' pedido.pk %}" target="_blank" rel="noopener" class="btn">
+            <i class="fas fa-print"></i> Ver / imprimir ticket
+        </a>
+        <a href="{% url 'orders:order_update' pedido.pk %}" class="btn btn-ghost">
+            <i class="fas fa-pencil-alt"></i> Editar
+        </a>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card modern-card">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Detalle del pedido</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-right">Cant.</th>
+                                <th class="text-right">Precio</th>
+                                <th class="text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pedido.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.producto.nombre }}</strong>
+                                    {% if item.nota %}<small class="d-block text-muted mt-1"><i class="fas fa-sticky-note"></i> {{ item.nota }}</small>{% endif %}
+                                </td>
+                                <td class="text-right">{{ item.cantidad|floatformat:0 }}</td>
+                                <td class="text-right">${{ item.precio_unitario|floatformat:2 }}</td>
+                                <td class="text-right font-weight-bold">${{ item.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-right text-muted">Subtotal</td>
+                                <td class="text-right">${{ pedido.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% if pedido.descuento %}
+                            <tr>
+                                <td colspan="3" class="text-right text-muted">Descuento</td>
+                                <td class="text-right text-danger">-${{ pedido.descuento|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="order-detail-total">
+                                <td colspan="3" class="text-right"><strong>TOTAL</strong></td>
+                                <td class="text-right"><strong>${{ pedido.total|floatformat:2 }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card modern-card">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-info-circle text-primary"></i> Información</h2>
+            </div>
+            <div class="card-body">
+                <dl class="info-dl mb-0">
+                    <dt>Estado</dt>
+                    <dd>
+                        {% if pedido.estado == 'completado' %}<span class="badge badge-success">Completado</span>
+                        {% elif pedido.estado == 'pendiente' %}<span class="badge badge-warning">Pendiente</span>
+                        {% else %}<span class="badge badge-secondary">Cancelado</span>{% endif %}
+                    </dd>
+
+                    <dt>Vendedor</dt>
+                    <dd>{{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }}</dd>
+
+                    <dt>Cliente</dt>
+                    <dd>{{ pedido.cliente|default:"—" }}</dd>
+
+                    <dt>Método de pago</dt>
+                    <dd>{{ pedido.get_metodo_pago_display }}</dd>
+
+                    {% if pedido.notas %}
+                    <dt>Notas</dt>
+                    <dd class="small"><i class="fas fa-sticky-note text-muted"></i> {{ pedido.notas }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+            {% if pedido.estado == 'pendiente' %}
+            <div class="card-footer bg-white d-flex">
+                <form method="post" action="{% url 'orders:order_completar' pedido.pk %}" class="flex-fill mr-2">
+                    {% csrf_token %}
+                    <button class="btn btn-success btn-block"><i class="fas fa-check"></i> Completar</button>
+                </form>
+                <form method="post" action="{% url 'orders:order_cancelar' pedido.pk %}" class="flex-fill">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-danger btn-block"><i class="fas fa-times"></i> Cancelar</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

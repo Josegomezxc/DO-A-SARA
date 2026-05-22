@@ -1,0 +1,75 @@
+/* ============================================================
+   _variables.css
+   Únicas variables (custom properties) del proyecto.
+   Se importa desde style.css con @import al inicio del archivo.
+   No agregar reglas con selectores acá: sólo variables.
+============================================================ */
+
+:root {
+  /* ---------- Paleta principal: blanco + azul ---------- */
+  --brand:          #2563EB;   /* Azul principal (royal blue) */
+  --brand-dark:     #1E40AF;   /* Azul oscuro (hover/active) */
+  --brand-light:    #EFF6FF;   /* Azul muy claro (fondos suaves) */
+  --brand-deep:     #1E3A8A;   /* Azul profundo (sidebar / acentos fuertes) */
+  --brand-accent:   #BFDBFE;   /* Azul pastel (bordes y detalles) */
+
+  /* ---------- Aliases legacy (proyecto anterior usaba donasara-*) ---------- */
+  --donasara-brand:       var(--brand);
+  --donasara-brand-dark:  var(--brand-dark);
+  --donasara-brand-light: var(--brand-light);
+  --donasara-deep:        var(--brand-deep);
+  --donasara-blue:        var(--brand);
+
+  /* ---------- Estados ---------- */
+  --color-success:  #1cc88a;
+  --color-warning:  #f6c23e;
+  --color-danger:   #e74a3b;
+  --color-info:     #36b9cc;
+  --color-muted:    #858796;
+
+  /* ---------- Neutros ---------- */
+  --color-white:    #ffffff;
+  --color-bg:       #f8f9fc;
+  --color-border:   #e3e6f0;
+  --color-text:     #5a5c69;
+  --color-heading:  #2e2f3a;
+
+  /* ---------- Tipografía ---------- */
+  --font-family-base: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-base:   1rem;
+  --font-size-sm:     0.875rem;
+  --font-size-xs:     0.75rem;
+  --line-height-base: 1.5;
+
+  /* ---------- Espaciado ---------- */
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2rem;
+
+  /* ---------- Bordes y sombras ---------- */
+  --radius-sm:    0.25rem;
+  --radius-md:    0.5rem;
+  --radius-lg:    1rem;
+  --radius-pill:  999px;
+
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 0.4rem 1rem rgba(37, 99, 235, 0.12);
+  --shadow-lg:  0 0.6rem 1.4rem rgba(0, 0, 0, 0.15);
+
+  /* ---------- Animaciones ---------- */
+  --transition-fast:  0.15s ease;
+  --transition-base:  0.22s ease;
+  --transition-slow:  0.32s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- Layout / Breakpoints (referencia, no se usan en @media) ---------- */
+  --bp-sm:  576px;
+  --bp-md:  768px;
+  --bp-lg:  992px;
+  --bp-xl:  1200px;
+
+  /* ---------- Sidebar (medidas) ---------- */
+  --sidebar-width:           14rem;
+  --sidebar-width-collapsed: 5.5rem;
+}
