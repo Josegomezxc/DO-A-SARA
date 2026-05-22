@@ -146,7 +146,7 @@
     "pk": 1,
     "fields": {
         "nombre": "Promo XXL Papi Pollo",
-        "descripcion": "Incluye una papi pollo XXL con pechuga y una papi pollo XXL con pierna con elecci髇 de ensalada, mayonesa, salsa de tomate y una coca cola de 1 Lt.",
+        "descripcion": "Incluye una papi pollo XXL con pechuga y una papi pollo XXL con pierna con elecci贸n de ensalada, mayonesa, salsa de tomate y una coca cola de 1 Lt.",
         "categoria": 1,
         "precio": "10.00",
         "imagen": "",
@@ -174,7 +174,7 @@
     "pk": 3,
     "fields": {
         "nombre": "Combo Especial",
-        "descripcion": "Incluye una hamburguesa Crispy del Pana Benito y una hamburguesa Gran Benito, acompa馻do de una coca cola de 1 Lt.",
+        "descripcion": "Incluye una hamburguesa Crispy del Pana Benito y una hamburguesa Gran Benito, acompa帽ado de una coca cola de 1 Lt.",
         "categoria": 2,
         "precio": "12.00",
         "imagen": "",
@@ -187,8 +187,8 @@
     "model": "products.product",
     "pk": 4,
     "fields": {
-        "nombre": "Porci髇 de papas fritas",
-        "descripcion": "Porci髇 individual de papas fritas crujientes.",
+        "nombre": "Porci贸n de papas fritas",
+        "descripcion": "Porci贸n individual de papas fritas crujientes.",
         "categoria": 3,
         "precio": "1.00",
         "imagen": "",
@@ -202,7 +202,7 @@
     "pk": 5,
     "fields": {
         "nombre": "Bolita del Sabor",
-        "descripcion": "Incluye deliciosa papa rellena de carne, ensalada, mayonesa, queso rallado y bebida personal a elecci髇 de 300ml.",
+        "descripcion": "Incluye deliciosa papa rellena de carne, ensalada, mayonesa, queso rallado y bebida personal a elecci贸n de 300ml.",
         "categoria": 3,
         "precio": "1.50",
         "imagen": "",
@@ -216,7 +216,7 @@
     "pk": 6,
     "fields": {
         "nombre": "Papas con Chorizo",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "1.25",
         "imagen": "",
@@ -230,7 +230,7 @@
     "pk": 7,
     "fields": {
         "nombre": "Papas con Chuzo Picante",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "1.25",
         "imagen": "",
@@ -244,7 +244,7 @@
     "pk": 8,
     "fields": {
         "nombre": "Papas con Chorizo Mandingo",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "2.25",
         "imagen": "",
@@ -258,7 +258,7 @@
     "pk": 9,
     "fields": {
         "nombre": "Papi Pollo",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "2.50",
         "imagen": "",
@@ -299,8 +299,8 @@
     "model": "products.product",
     "pk": 12,
     "fields": {
-        "nombre": "Papas La Explosi髇 del Pana Benito",
-        "descripcion": "Incluye dos porciones de carne de hamburguesa troceada en cuadritos, gran porci髇 de papas fritas y queso cheddar.",
+        "nombre": "Papas La Explosi贸n del Pana Benito",
+        "descripcion": "Incluye dos porciones de carne de hamburguesa troceada en cuadritos, gran porci贸n de papas fritas y queso cheddar.",
         "categoria": 3,
         "precio": "5.00",
         "imagen": "",
@@ -314,7 +314,7 @@
     "pk": 13,
     "fields": {
         "nombre": "Papi Pollo XXL con Pechuga",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "5.00",
         "imagen": "",
@@ -328,7 +328,7 @@
     "pk": 14,
     "fields": {
         "nombre": "Papi Pollo XXL con Pierna",
-        "descripcion": "Incluye a elecci髇 ensalada, mayonesa y salsa de tomate.",
+        "descripcion": "Incluye a elecci贸n ensalada, mayonesa y salsa de tomate.",
         "categoria": 3,
         "precio": "4.00",
         "imagen": "",
@@ -356,7 +356,7 @@
     "pk": 16,
     "fields": {
         "nombre": "Hamburguesa Benito",
-        "descripcion": "Incluye carne, tocino, lechuga, tomate, cebolla caramelizada, queso cheddar laminado, huevo, salsa de tomate, mayonesa, mostaza y porci髇 de papas fritas.",
+        "descripcion": "Incluye carne, tocino, lechuga, tomate, cebolla caramelizada, queso cheddar laminado, huevo, salsa de tomate, mayonesa, mostaza y porci贸n de papas fritas.",
         "categoria": 4,
         "precio": "3.75",
         "imagen": "",
@@ -384,7 +384,7 @@
     "pk": 18,
     "fields": {
         "nombre": "Hamburguesa La Crispy del Pana Benito",
-        "descripcion": "Incluye pollo, tocino, cebolla caramelizada, queso cheddar laminado, lechuga, tomate, salsa de tomate, mostaza, mayonesa y porci髇 de papas fritas.",
+        "descripcion": "Incluye pollo, tocino, cebolla caramelizada, queso cheddar laminado, lechuga, tomate, salsa de tomate, mostaza, mayonesa y porci贸n de papas fritas.",
         "categoria": 4,
         "precio": "6.00",
         "imagen": "",
@@ -398,7 +398,7 @@
     "pk": 19,
     "fields": {
         "nombre": "Extra Ensalada",
-        "descripcion": "Porci髇 de ensalada.",
+        "descripcion": "Porci贸n de ensalada.",
         "categoria": 5,
         "precio": "0.25",
         "imagen": "",
@@ -412,7 +412,7 @@
     "pk": 20,
     "fields": {
         "nombre": "Extra Mayonesa",
-        "descripcion": "Porci髇 de mayonesa.",
+        "descripcion": "Porci贸n de mayonesa.",
         "categoria": 5,
         "precio": "0.25",
         "imagen": "",
@@ -426,7 +426,7 @@
     "pk": 21,
     "fields": {
         "nombre": "Extra Salsa de Tomate",
-        "descripcion": "Porci髇 de salsa de tomate.",
+        "descripcion": "Porci贸n de salsa de tomate.",
         "categoria": 5,
         "precio": "0.25",
         "imagen": "",
