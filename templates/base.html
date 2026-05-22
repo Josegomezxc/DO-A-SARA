@@ -327,13 +327,13 @@
     {% block content_anon %}{% block anon_body %}{% endblock %}{% endblock %}
 {% endif %}
 
-{# Bootstrap 4 + jQuery #}
+{# Bootstrap 4 + jQuery (sin sb-admin-2.min.js: tenía un auto-toggle del sidebar
+   al resize <480px que abría el menú al hacer scroll en mobile) #}
 <script src="{% static 'sb-admin-2/vendor/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'sb-admin-2/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'sb-admin-2/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
-<script src="{% static 'sb-admin-2/js/sb-admin-2.min.js' %}"></script>
 
-{# JS propio #}
+{# JS propio (incluye sidebar toggle + scroll-to-top) #}
 <script src="{% static 'users/js/main.js' %}"></script>
 
 {% block extra_scripts %}{% endblock %}

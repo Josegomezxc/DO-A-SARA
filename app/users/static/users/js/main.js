@@ -1,32 +1,45 @@
-/* ===== Doña Sara - JS general (Bootstrap 4 + jQuery) ===== */
+/* ===== Doña Sara — JS general (Bootstrap 4 + jQuery) =====
+   Maneja:
+   - Toggle del sidebar (mobile + tablet + desktop)
+   - Backdrop, botón ✕, tecla ESC, click en link, click outside
+   - Botón scroll-to-top
+   - Auto-dismiss de alerts
+   - Helpers globales (formatMoney, getCsrfToken)
+   No usamos sb-admin-2.min.js porque tenía un handler que abría el
+   sidebar solo al hacer scroll en mobile (resize <480px).
+============================================================= */
 
 $(function () {
-    // Auto-dismiss de alerts después de 6s
+
+    // ----- Auto-dismiss de alerts después de 6s -----
     setTimeout(function () {
         $('.alert:not(.alert-permanent)').fadeOut(400, function () { $(this).remove(); });
     }, 6000);
 
-    // Tooltips
+    // ----- Tooltips -----
     $('[data-toggle="tooltip"]').tooltip();
 
-    // Confirmación inline para botones con data-confirm
+    // ----- Confirm para botones con data-confirm -----
     $('.btn-confirm').on('click', function (e) {
         var msg = $(this).data('confirm') || '¿Estás seguro?';
         if (!confirm(msg)) e.preventDefault();
     });
 
-    // ===== Sidebar mobile: hamburger + backdrop + close button =====
+    // ===== Sidebar: hamburger + backdrop + close button + ESC =====
     var $sidebar = $('#accordionSidebar');
     var $backdrop = $('#sidebarBackdrop');
     var $hamburger = $('#sidebarToggleTop');
     var $bottomToggle = $('#sidebarToggle');
     var $closeBtn = $('#sidebarCloseBtn');
 
-    function isMobile() { return window.matchMedia('(max-width: 991.98px)').matches; }
+    // Mobile y tablet: < 992px (Bootstrap lg breakpoint)
+    function isMobileOrTablet() {
+        return window.matchMedia('(max-width: 991.98px)').matches;
+    }
 
     function showSidebar() {
         $sidebar.addClass('toggled');
-        if (isMobile()) {
+        if (isMobileOrTablet()) {
             $backdrop.addClass('show');
             $('body').css('overflow', 'hidden');
         }
@@ -39,65 +52,73 @@ $(function () {
     }
 
     function toggleSidebar() {
-        if ($sidebar.hasClass('toggled')) {
-            hideSidebar();
-        } else {
-            showSidebar();
-        }
+        if ($sidebar.hasClass('toggled')) hideSidebar();
+        else showSidebar();
     }
 
-    // SB Admin 2 trae su propio handler en sb-admin-2.min.js; lo reemplazamos.
-    // Quitamos handlers previos para evitar dobles toggles.
-    $hamburger.off('click').on('click', function (e) {
-        e.preventDefault();
-        toggleSidebar();
-    });
-    $bottomToggle.off('click').on('click', function (e) {
-        e.preventDefault();
-        toggleSidebar();
-    });
-
-    // Click en el backdrop cierra el sidebar
+    $hamburger.on('click', function (e) { e.preventDefault(); toggleSidebar(); });
+    $bottomToggle.on('click', function (e) { e.preventDefault(); toggleSidebar(); });
     $backdrop.on('click', hideSidebar);
+    $closeBtn.on('click', function (e) { e.preventDefault(); hideSidebar(); });
 
-    // Click en el botón ✕ del sidebar cierra el sidebar
-    $closeBtn.on('click', function (e) {
-        e.preventDefault();
-        hideSidebar();
-    });
-
-    // En mobile, click en un link del sidebar cierra el sidebar después de navegar
+    // Click en un link del sidebar (mobile/tablet) → cerrar
     $sidebar.on('click', 'a.nav-link[href]:not([href="#"])', function () {
-        if (isMobile()) hideSidebar();
+        if (isMobileOrTablet()) hideSidebar();
     });
 
-    // Cerrar con ESC
+    // Tecla ESC cierra el sidebar abierto
     $(document).on('keydown', function (e) {
-        if (e.key === 'Escape' && $sidebar.hasClass('toggled') && isMobile()) {
+        if (e.key === 'Escape' && $sidebar.hasClass('toggled') && isMobileOrTablet()) {
             hideSidebar();
         }
     });
 
-    // Si redimensionan la ventana hacia desktop, sacamos el backdrop
+    // Al redimensionar A desktop (>= 992px), sacar backdrop y body lock
     var resizeTimer;
     $(window).on('resize', function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function () {
-            if (!isMobile()) {
+            if (!isMobileOrTablet()) {
                 $backdrop.removeClass('show');
                 $('body').css('overflow', '');
             }
         }, 150);
     });
+    // IMPORTANTE: NO agregamos auto-toggle del sidebar al resizear.
+    // SB Admin 2 lo hacía y causaba que el sidebar se abriera solo
+    // al hacer scroll en mobile (porque el browser dispara resize al
+    // mostrar/ocultar la barra de URL).
+
+
+    // ===== Scroll-to-top button =====
+    var $scrollTop = $('.scroll-to-top');
+
+    $(document).on('scroll', function () {
+        if ($(this).scrollTop() > 100) $scrollTop.fadeIn(150);
+        else $scrollTop.fadeOut(150);
+    });
+
+    $scrollTop.on('click', function (e) {
+        e.preventDefault();
+        var href = $(this).attr('href') || '#page-top';
+        var $target = $(href).length ? $(href) : $('html, body');
+        $('html, body').stop().animate({
+            scrollTop: $target === $('html, body') ? 0 : $target.offset().top
+        }, 600);
+    });
+
+    // Estado inicial: ocultar el scroll-to-top si estamos arriba
+    if ($(document).scrollTop() <= 100) $scrollTop.hide();
 });
 
-// Helper: formatear moneda en pesos
+
+// ===== Helpers globales =====
+
 window.formatMoney = function (value) {
     var num = parseFloat(value || 0);
     return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-// Helper: leer CSRF token desde cookie
 window.getCsrfToken = function () {
     var name = 'csrftoken';
     var cookies = document.cookie.split(';');
