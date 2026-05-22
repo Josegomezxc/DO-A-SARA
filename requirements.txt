@@ -1,2 +1,19 @@
-Django>=4.2,<5.1
+# ============================================================
+# requirements.txt — Doña Sara (Django POS)
+# ============================================================
+# Sólo las dependencias top-level que el proyecto usa de forma
+# directa. Las transitivas (asgiref, sqlparse, tzdata) las trae
+# pip automáticamente al instalar Django.
+# ============================================================
+
+# Framework principal
+Django>=4.2,<7.0
+
+# Driver de PostgreSQL (psycopg2 con binarios precompilados)
 psycopg2-binary>=2.9
+
+# Servir archivos estáticos en producción sin nginx/apache
+whitenoise>=6.0
+
+# Parsear DATABASE_URL en deploy (Heroku, Render, Railway, etc.)
+dj-database-url>=3.1
