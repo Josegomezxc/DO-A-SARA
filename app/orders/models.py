@@ -100,6 +100,19 @@ class Order(models.Model):
         self.estado = self.ESTADO_CANCELADO
         self.save(update_fields=['estado', 'actualizado'])
 
+    # ---------- Desglose de IVA ----------
+    IVA_RATE = Decimal('0.15')
+
+    @property
+    def subtotal_sin_iva(self):
+        """Subtotal sin IVA (subtotal - 15%)."""
+        return (self.subtotal - self.iva_subtotal).quantize(Decimal('0.001'))
+
+    @property
+    def iva_subtotal(self):
+        """IVA sobre el subtotal: subtotal × 15%."""
+        return (self.subtotal * self.IVA_RATE).quantize(Decimal('0.001'))
+
 
 class OrderItem(models.Model):
     """Línea de detalle de un pedido."""

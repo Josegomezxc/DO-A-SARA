@@ -102,6 +102,11 @@ hr {
   margin: 0.85rem 0;
 }
 
+hr.hr-total {
+  border-top: 2px solid var(--tk-brand-deep);
+  margin: 0.5rem 0;
+}
+
 /* ===== Header info ===== */
 .row {
   display: flex;
@@ -120,51 +125,119 @@ hr {
 
 .row strong { color: var(--tk-brand-deep); font-weight: 700; }
 
-/* ===== Items ===== */
+/* ===== Tabla de items (4 columnas) ===== */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   margin: 0.25rem 0;
 }
 
+table th,
 table td {
-  padding: 0.15rem 0;
+  padding: 0.3rem 0.15rem;
   vertical-align: top;
 }
 
-/* Nombre del producto en una fila propia, en negrita */
-table tr:nth-child(3n+1) td {
-  padding-top: 0.5rem;
+/* Encabezado de tabla */
+.table-header th {
+  font-family: 'Segoe UI', system-ui, sans-serif;
   font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--tk-muted);
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.4rem;
+}
+
+.th-desc { text-align: left; width: 42%; }
+.th-qty  { text-align: center; width: 12%; }
+.th-price { text-align: right; width: 22%; }
+.th-subt { text-align: right; width: 24%; }
+
+/* Filas de items */
+.item-row td {
+  padding-top: 0.4rem;
+  border-bottom: 1px dotted #f1f5f9;
+}
+
+.td-desc {
+  font-weight: 600;
   color: var(--tk-text);
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
-td.qty {
-  width: 60%;
+.td-qty {
+  text-align: center;
   font-family: 'Courier New', monospace;
   color: var(--tk-muted);
 }
 
-td.subt {
+.td-price {
   text-align: right;
-  width: 40%;
+  font-family: 'Courier New', monospace;
+  color: var(--tk-muted);
+}
+
+.td-subt {
+  text-align: right;
   font-family: 'Courier New', monospace;
   font-weight: 700;
   color: var(--tk-text);
+}
+
+.item-note {
+  padding-left: 0.5rem !important;
+  font-style: italic;
+  color: var(--tk-muted);
+}
+
+.item-note i {
+  margin-right: 0.25rem;
+  font-size: 0.7rem;
+}
+
+/* ===== Sección de totales / IVA ===== */
+.totals-section {
+  padding: 0.25rem 0;
+}
+
+.totals-row {
+  font-size: 0.82rem;
+  margin: 0.3rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+.totals-row span:first-child {
+  color: var(--tk-muted);
+}
+
+.totals-row span:last-child {
+  font-weight: 600;
+  color: var(--tk-text);
+}
+
+.subtotal-line {
+  font-weight: 700;
+  padding-top: 0.3rem;
+  border-top: 1px dotted #cbd5e1;
+  margin-top: 0.4rem;
+}
+
+.descuento-line span:last-child {
+  color: #dc2626 !important;
+  font-weight: 700;
 }
 
 /* ===== Total destacado ===== */
 .total {
   font-size: 1.1rem;
   font-weight: 800;
-  padding: 0.65rem 0;
+  padding: 0.65rem 0.35rem;
   background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.08) 50%, transparent 100%);
   border-radius: 6px;
   margin: 0.35rem -0.35rem;
-  padding-left: 0.35rem;
-  padding-right: 0.35rem;
 }
 
 .total span:last-child {
@@ -175,8 +248,16 @@ td.subt {
 /* ===== Centrados ===== */
 .center { text-align: center; }
 
+/* Nota de impuesto */
+p.tax-note {
+  margin-bottom: 0.25rem !important;
+  font-size: 0.7rem !important;
+  color: var(--tk-muted) !important;
+  font-style: italic;
+}
+
 /* Mensaje de "Gracias por tu compra!" más vistoso */
-p.small.center {
+p.small.center:last-of-type {
   margin-top: 0.5rem !important;
   padding: 0.65rem 0.5rem;
   background: rgba(37, 99, 235, 0.06);
@@ -205,9 +286,11 @@ p.small.center {
   .ticket::after { display: none; }
   .no-print { display: none !important; }
   .total { background: none; }
+  hr.hr-total { border-top: 2px solid #000; }
 }
 
 /* ===== Mobile responsive ===== */
 @media (max-width: 380px) {
   .ticket { width: 100%; }
 }
+

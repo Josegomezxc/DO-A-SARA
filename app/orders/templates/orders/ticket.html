@@ -16,6 +16,8 @@
         <h2 class="brand">DOÑA SARA</h2>
         <p class="small brand-sub">Papas y hamburguesas</p>
         <hr>
+
+        <!-- Datos del ticket -->
         <div class="row small">
             <span>Ticket:</span> <strong>{{ pedido.numero }}</strong>
         </div>
@@ -28,40 +30,74 @@
         {% if pedido.cliente %}
         <div class="row small"><span>Cliente:</span> <span>{{ pedido.cliente }}</span></div>
         {% endif %}
+        <div class="row small">
+            <span>Método de pago:</span> <span>{{ pedido.get_metodo_pago_display }}</span>
+        </div>
         <hr>
+
+        <!-- Detalle de productos -->
         <table>
+            <thead>
+                <tr class="table-header">
+                    <th class="th-desc">Descripción</th>
+                    <th class="th-qty">Cant.</th>
+                    <th class="th-price">P.Unit</th>
+                    <th class="th-subt">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
             {% for item in pedido.items.all %}
-            <tr>
-                <td>{{ item.producto.nombre|truncatechars:24 }}</td>
-            </tr>
-            <tr>
-                <td class="qty">{{ item.cantidad|floatformat:2 }} x ${{ item.precio_unitario|floatformat:0 }}</td>
-                <td class="subt">${{ item.subtotal|floatformat:0 }}</td>
-            </tr>
-            {% if item.nota %}<tr><td colspan="2" class="small">  + {{ item.nota }}</td></tr>{% endif %}
+                <tr class="item-row">
+                    <td class="td-desc">{{ item.producto.nombre }}</td>
+                    <td class="td-qty">{{ item.cantidad|floatformat:0 }}</td>
+                    <td class="td-price">${{ item.precio_unitario|floatformat:2 }}</td>
+                    <td class="td-subt">${{ item.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% if item.nota %}
+                <tr><td colspan="4" class="small item-note"><i class="fas fa-comment-dots"></i> {{ item.nota }}</td></tr>
+                {% endif %}
             {% endfor %}
+            </tbody>
         </table>
+
         <hr>
-        <div class="row">
-            <span>Subtotal:</span> <span>${{ pedido.subtotal|floatformat:2 }}</span>
+
+        <!-- Desglose de totales -->
+        <div class="totals-section">
+            <div class="row totals-row">
+                <span>Subtotal (sin IVA):</span>
+                <span>${{ pedido.subtotal_sin_iva|floatformat:3 }}</span>
+            </div>
+            <div class="row totals-row">
+                <span>IVA (15%):</span>
+                <span>${{ pedido.iva_subtotal|floatformat:3 }}</span>
+            </div>
+            <div class="row totals-row subtotal-line">
+                <span>Subtotal:</span>
+                <span>${{ pedido.subtotal|floatformat:2 }}</span>
+            </div>
+            {% if pedido.descuento %}
+            <div class="row totals-row descuento-line">
+                <span>Descuento:</span>
+                <span>-${{ pedido.descuento|floatformat:2 }}</span>
+            </div>
+            {% endif %}
         </div>
-        {% if pedido.descuento %}
-        <div class="row">
-            <span>Descuento:</span> <span>-${{ pedido.descuento|floatformat:2 }}</span>
-        </div>
-        {% endif %}
-        <hr>
+
+        <hr class="hr-total">
+
         <div class="row total">
-            <span>TOTAL:</span> <span>${{ pedido.total|floatformat:2 }}</span>
+            <span>TOTAL:</span>
+            <span>${{ pedido.total|floatformat:2 }}</span>
         </div>
-        <div class="row small mt-2">
-            <span>Pago:</span> <span>{{ pedido.get_metodo_pago_display }}</span>
-        </div>
+
         {% if pedido.notas %}
         <hr>
         <p class="small"><i class="fas fa-sticky-note" aria-hidden="true"></i> {{ pedido.notas }}</p>
         {% endif %}
+
         <hr>
+        <p class="small center tax-note">* Precios incluyen IVA (15%)</p>
         <p class="small center">¡Gracias por tu compra!</p>
     </section>
 

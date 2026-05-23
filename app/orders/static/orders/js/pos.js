@@ -289,10 +289,22 @@
       render();
     });
 
+    // Bloquear teclas no enteras (punto, coma, e, +, -)
+    $tbody.addEventListener('keydown', (ev) => {
+      if (state === 'guardado') return;
+      const t = ev.target;
+      if (!t.classList.contains('qty-input')) return;
+      if (['.', ',', 'e', 'E', '+', '-'].includes(ev.key)) {
+        ev.preventDefault();
+      }
+    });
+
     $tbody.addEventListener('input', (ev) => {
       if (state === 'guardado') return;
       const t = ev.target;
       if (!t.classList.contains('qty-input')) return;
+      // Forzar solo enteros: quitar cualquier caracter no numérico
+      t.value = t.value.replace(/[^0-9]/g, '');
       const item = cart.get(t.dataset.id);
       if (!item) return;
       const v = parseInt(t.value, 10);
@@ -302,6 +314,7 @@
       }
     });
 
+    // Al perder foco, corregir valores fuera de rango
     $tbody.addEventListener('blur', (ev) => {
       if (state === 'guardado') return;
       const t = ev.target;
@@ -311,6 +324,16 @@
       item.cantidad = sanitizeQty(t.value);
       render();
     }, true);
+
+    // Bloquear pegado de valores no enteros
+    $tbody.addEventListener('paste', (ev) => {
+      const t = ev.target;
+      if (!t.classList.contains('qty-input')) return;
+      const paste = (ev.clipboardData || window.clipboardData).getData('text');
+      if (!/^\d+$/.test(paste)) {
+        ev.preventDefault();
+      }
+    });
   }
 
   if ($btnClear) {
