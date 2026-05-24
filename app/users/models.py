@@ -7,9 +7,12 @@ from django.urls import reverse
 class Profile(models.Model):
     """Perfil extendido del usuario con rol y datos adicionales."""
 
-    ROL_ADMIN = 'admin'
-    ROL_EMPLEADO = 'empleado'
+    ROL_SUPEROWNER = 'superowner'   # Dueño del SaaS — protegido, no editable por nadie
+    ROL_ADMIN = 'admin'             # Admin del negocio cliente
+    ROL_EMPLEADO = 'empleado'       # Empleado del negocio cliente
+
     ROL_CHOICES = (
+        (ROL_SUPEROWNER, 'Propietario del sistema'),
         (ROL_ADMIN, 'Administrador'),
         (ROL_EMPLEADO, 'Empleado'),
     )
@@ -42,8 +45,12 @@ class Profile(models.Model):
         return f'{self.user.get_full_name() or self.user.username} ({self.get_rol_display()})'
 
     @property
+    def es_superowner(self):
+        return self.rol == self.ROL_SUPEROWNER
+
+    @property
     def es_admin(self):
-        return self.rol == self.ROL_ADMIN or self.user.is_superuser
+        return self.rol in (self.ROL_ADMIN, self.ROL_SUPEROWNER) or self.user.is_superuser
 
     @property
     def es_empleado(self):

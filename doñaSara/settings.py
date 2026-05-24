@@ -169,3 +169,39 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
+
+
+# ─────────────────────────────────────────────────────
+# SEGURIDAD — configuración para producción
+# ─────────────────────────────────────────────────────
+
+# Protección CSRF
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Sesiones seguras
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 60 * 60 * 8       # 8 horas máximo
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# Forzar HTTPS en producción
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+
+# Cabeceras de seguridad HTTP
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Rate limiting en login — activar en producción:
+# 1. pip install django-axes
+# 2. Agregar 'axes' a INSTALLED_APPS (antes de django.contrib.auth)
+# 3. Agregar 'axes.backends.AxesStandaloneBackend' a AUTHENTICATION_BACKENDS
+# 4. Agregar AxesMiddleware al MIDDLEWARE
+# AXES_FAILURE_LIMIT = 5          # Bloquear tras 5 intentos fallidos
+# AXES_COOLOFF_TIME = 1           # Bloqueo de 1 hora
+# AXES_RESET_ON_SUCCESS = True

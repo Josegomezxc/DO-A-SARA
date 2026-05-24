@@ -7,14 +7,24 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 
 
+def _es_admin_o_superior(user):
+    """True si el usuario es admin, superowner o superuser de Django."""
+    profile = getattr(user, 'profile', None)
+    return user.is_superuser or (profile and profile.es_admin)
+
+
+def _es_superowner(user):
+    profile = getattr(user, 'profile', None)
+    return profile and profile.es_superowner
+
+
 def admin_required(view_func):
-    """Permite solo a usuarios con rol administrador o superuser."""
+    """Permite solo a usuarios con rol administrador, superowner o superuser."""
 
     @wraps(view_func)
     @login_required
     def _wrapped(request, *args, **kwargs):
-        profile = getattr(request.user, 'profile', None)
-        if request.user.is_superuser or (profile and profile.es_admin):
+        if _es_admin_o_superior(request.user):
             return view_func(request, *args, **kwargs)
         messages.error(request, 'No tenés permisos para acceder a esta sección.')
         return redirect('users:dashboard')
@@ -37,14 +47,13 @@ def empleado_required(view_func):
 
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Mixin de CBV: requiere rol administrador."""
+    """Mixin de CBV: requiere rol administrador o superior."""
 
     raise_exception = False
     permission_denied_message = 'Sólo administradores pueden acceder a esta sección.'
 
     def test_func(self):
-        profile = getattr(self.request.user, 'profile', None)
-        return self.request.user.is_superuser or (profile and profile.es_admin)
+        return _es_admin_o_superior(self.request.user)
 
     def handle_no_permission(self):
         if self.request.user.is_authenticated:

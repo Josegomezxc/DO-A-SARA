@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} empleado{% endblock %}
+{% block title %}{% if object %}Editar{% else %}Nuevo{% endif %} usuario{% endblock %}
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'users:empleado_list' %}">Empleados</a></li>
+<li class="breadcrumb-item"><a href="{% url 'users:empleado_list' %}">Usuarios</a></li>
 <li class="breadcrumb-item active">{% if object %}Editar{% else %}Nuevo{% endif %}</li>
 {% endblock %}
 
@@ -10,37 +10,44 @@
 <section class="page-hero" aria-label="Cabecera del formulario">
     <h1>
         <i class="fas fa-user{% if object %}-edit{% else %}-plus{% endif %}"></i>
-        {% if object %}Editar usuario{% else %}Crear nuevo usuario{% endif %}
+        {% if object %}Editar usuario{% else %}Nuevo usuario{% endif %}
     </h1>
-    <p class="lead">{% if object %}Modificá los datos del usuario.{% else %}Completá los datos del nuevo usuario del sistema.{% endif %}</p>
+    <p class="lead">{% if object %}Modificá el rol o estado del usuario.{% else %}Ingresá usuario, contraseña y rol.{% endif %}</p>
 </section>
 
 <div class="row justify-content-center">
-    <div class="col-lg-10">
+    <div class="col-lg-6">
         <div class="card modern-card mb-4">
             <div class="card-header">
-                <h2 class="h6 m-0"><i class="fas fa-id-card text-primary"></i> Datos del usuario</h2>
+                <h2 class="h6 m-0">
+                    <i class="fas fa-id-card text-primary"></i>
+                    Datos del usuario
+                </h2>
             </div>
-            <form method="post" novalidate>
+            <form method="post" novalidate autocomplete="off">
                 {% csrf_token %}
                 <div class="card-body">
-                    <div class="form-row">
-                        {% for field in form %}
-                        <div class="form-group col-md-{% if field.field.widget.input_type == 'checkbox' %}6{% elif field.name == 'documento' or field.name == 'telefono' or field.name == 'rol' or field.name == 'first_name' or field.name == 'last_name' %}6{% else %}12{% endif %}">
-                            {% if field.field.widget.input_type == 'checkbox' %}
-                                <div class="form-check mt-md-4">
-                                    {{ field }}
-                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                </div>
-                            {% else %}
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% for field in form %}
+                    <div class="form-group">
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check">
                                 {{ field }}
-                            {% endif %}
-                            {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
-                            {% if field.errors %}<small class="text-danger d-block">{{ field.errors|join:", " }}</small>{% endif %}
-                        </div>
-                        {% endfor %}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+                        {% else %}
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                            <small class="text-danger d-block">{{ field.errors|join:", " }}</small>
+                        {% endif %}
                     </div>
+                    {% endfor %}
                 </div>
                 <div class="card-footer bg-white d-flex justify-content-between">
                     <a href="{% url 'users:empleado_list' %}" class="btn btn-outline-secondary">

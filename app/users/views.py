@@ -11,22 +11,19 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
-    CreateView, DetailView, ListView, TemplateView, UpdateView,
+    CreateView, DetailView, FormView, ListView, TemplateView, UpdateView,
 )
 
-from .decorators import AdminRequiredMixin
+from .decorators import AdminRequiredMixin, _es_superowner
 from .forms import EmpleadoCreateForm, EmpleadoEditForm, StyledAuthenticationForm
 from .models import Profile
 
 
-# ---------- Búsqueda global ----------
+# ──────────────────────────────────────────────
+# Búsqueda global
+# ──────────────────────────────────────────────
 
 class GlobalSearchView(LoginRequiredMixin, TemplateView):
-    """Búsqueda global: productos, pedidos, categorías y empleados.
-
-    Empleados sólo ven productos activos y SUS pedidos.
-    Admins ven todo (incluido inactivos, empleados y todas las categorías).
-    """
     template_name = 'users/search.html'
 
     def get_context_data(self, **kwargs):
@@ -44,21 +41,18 @@ class GlobalSearchView(LoginRequiredMixin, TemplateView):
         profile = getattr(self.request.user, 'profile', None)
         es_admin = self.request.user.is_superuser or (profile and profile.es_admin)
 
-        # Productos
         prod_qs = Product.objects.select_related('categoria').filter(
             Q(nombre__icontains=q) | Q(descripcion__icontains=q)
         )
         if not es_admin:
             prod_qs = prod_qs.filter(activo=True)
 
-        # Pedidos
         ped_qs = Order.objects.select_related('vendedor').filter(
             Q(numero__icontains=q) | Q(cliente__icontains=q) | Q(notas__icontains=q)
         ).order_by('-creado')
         if not es_admin:
             ped_qs = ped_qs.filter(vendedor=self.request.user)
 
-        # Categorías y empleados sólo para admin
         cat_qs = []
         emp_qs = []
         if es_admin:
@@ -68,7 +62,7 @@ class GlobalSearchView(LoginRequiredMixin, TemplateView):
                 Q(first_name__icontains=q) |
                 Q(last_name__icontains=q) |
                 Q(email__icontains=q)
-            )
+            ).exclude(profile__rol=Profile.ROL_SUPEROWNER)  # superowner no aparece en búsquedas
 
         ctx['productos'] = prod_qs[:15]
         ctx['productos_count'] = prod_qs.count()
@@ -86,7 +80,9 @@ class GlobalSearchView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
-# ---------- Login / Logout ----------
+# ──────────────────────────────────────────────
+# Login / Logout
+# ──────────────────────────────────────────────
 
 class CustomLoginView(LoginView):
     template_name = 'users/login.html'
@@ -106,11 +102,11 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy('users:login')
 
 
-# ---------- Dashboard ----------
+# ──────────────────────────────────────────────
+# Dashboard
+# ──────────────────────────────────────────────
 
 class DashboardView(LoginRequiredMixin, TemplateView):
-    """Dashboard principal con vistas diferenciadas por rol."""
-
     def get_template_names(self):
         profile = getattr(self.request.user, 'profile', None)
         if self.request.user.is_superuser or (profile and profile.es_admin):
@@ -141,7 +137,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             estado=Order.ESTADO_COMPLETADO,
         ).aggregate(total=Sum('total'), cantidad=Count('id'))
 
-        # Top 5 productos del mes
         top_productos = (
             OrderItem.objects.filter(
                 pedido__creado__date__gte=inicio_mes,
@@ -152,7 +147,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             .order_by('-cantidad')[:5]
         )
 
-        # ---------- Gráfico 1: Ventas por día (últimos 7 días) ----------
         dias_labels = []
         dias_data = []
         for i in range(6, -1, -1):
@@ -163,7 +157,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             dias_labels.append(dia.strftime('%a %d/%m'))
             dias_data.append(float(total))
 
-        # ---------- Gráfico 2: Ventas por categoría del mes ----------
         cat_qs = (
             OrderItem.objects.filter(
                 pedido__creado__date__gte=inicio_mes,
@@ -173,9 +166,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             .annotate(total=Sum('subtotal'))
             .order_by('-total')
         )
-        cat_labels = []
-        cat_data = []
-        cat_colors = []
+        cat_labels, cat_data, cat_colors = [], [], []
         for c in cat_qs:
             cat_labels.append(c['producto__categoria__nombre'] or 'Sin categoría')
             cat_data.append(float(c['total'] or 0))
@@ -193,16 +184,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'ventas_semana_cantidad': ventas_semana.get('cantidad') or 0,
             'ventas_mes_total': ventas_mes.get('total') or 0,
             'ventas_mes_cantidad': ventas_mes.get('cantidad') or 0,
-            'pedidos_pendientes': Order.objects.filter(
-                estado=Order.ESTADO_PENDIENTE
-            ).count(),
+            'pedidos_pendientes': Order.objects.filter(estado=Order.ESTADO_PENDIENTE).count(),
             'productos_activos': Product.objects.filter(activo=True).count(),
             'empleados_activos': User.objects.filter(
                 is_active=True, profile__rol=Profile.ROL_EMPLEADO,
             ).count(),
-            'mis_pedidos_hoy': pedidos_hoy.filter(
-                vendedor=self.request.user
-            ).count(),
+            'mis_pedidos_hoy': pedidos_hoy.filter(vendedor=self.request.user).count(),
             'ultimos_pedidos': Order.objects.select_related('vendedor').order_by('-creado')[:8],
             'mis_ultimos_pedidos': Order.objects.filter(
                 vendedor=self.request.user
@@ -213,7 +200,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return ctx
 
 
-# ---------- Gestión de empleados (solo admin) ----------
+# ──────────────────────────────────────────────
+# Gestión de empleados (solo admin)
+# ──────────────────────────────────────────────
+
+def _usuario_es_protegido(usuario):
+    """True si el usuario es superowner y no debe ser tocado por nadie."""
+    profile = getattr(usuario, 'profile', None)
+    return profile and profile.es_superowner
+
 
 class EmpleadoListView(AdminRequiredMixin, ListView):
     model = User
@@ -222,7 +217,10 @@ class EmpleadoListView(AdminRequiredMixin, ListView):
     paginate_by = 8
 
     def get_queryset(self):
-        qs = User.objects.select_related('profile').order_by('-date_joined')
+        # Superowners nunca aparecen en la lista de empleados
+        qs = User.objects.select_related('profile').exclude(
+            profile__rol=Profile.ROL_SUPEROWNER
+        ).order_by('-date_joined')
         q = self.request.GET.get('q', '').strip()
         if q:
             qs = qs.filter(
@@ -245,19 +243,23 @@ class EmpleadoListView(AdminRequiredMixin, ListView):
         ctx['q'] = self.request.GET.get('q', '')
         ctx['rol'] = self.request.GET.get('rol', '')
         ctx['estado'] = self.request.GET.get('estado', '')
-        ctx['roles'] = Profile.ROL_CHOICES
+        # Solo mostrar admin y empleado en el filtro (nunca superowner)
+        ctx['roles'] = [
+            (Profile.ROL_EMPLEADO, 'Empleado'),
+            (Profile.ROL_ADMIN, 'Administrador'),
+        ]
         return ctx
 
 
-class EmpleadoCreateView(AdminRequiredMixin, CreateView):
+class EmpleadoCreateView(AdminRequiredMixin, FormView):
     form_class = EmpleadoCreateForm
     template_name = 'users/empleado_form.html'
     success_url = reverse_lazy('users:empleado_list')
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Usuario {self.object.username} creado correctamente.')
-        return response
+        user = form.save()
+        messages.success(self.request, f'Usuario "{user.username}" creado correctamente.')
+        return super().form_valid(form)
 
 
 class EmpleadoUpdateView(AdminRequiredMixin, UpdateView):
@@ -265,6 +267,14 @@ class EmpleadoUpdateView(AdminRequiredMixin, UpdateView):
     form_class = EmpleadoEditForm
     template_name = 'users/empleado_form.html'
     success_url = reverse_lazy('users:empleado_list')
+
+    def dispatch(self, request, *args, **kwargs):
+        usuario = self.get_object()
+        # Protección: nadie puede editar a un superowner
+        if _usuario_es_protegido(usuario):
+            messages.error(request, 'Este usuario no puede ser modificado.')
+            return redirect('users:empleado_list')
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -274,15 +284,21 @@ class EmpleadoUpdateView(AdminRequiredMixin, UpdateView):
 
 class EmpleadoDeleteView(AdminRequiredMixin, DetailView):
     """Baja lógica del usuario."""
-
     model = User
     template_name = 'users/empleado_confirm_delete.html'
     context_object_name = 'object'
 
     def post(self, request, *args, **kwargs):
         usuario = self.get_object()
+
+        # Protección 1: nadie puede desactivarse a sí mismo
         if usuario.pk == request.user.pk:
             messages.error(request, 'No podés desactivarte a vos mismo.')
+            return redirect('users:empleado_list')
+
+        # Protección 2: superowner es intocable
+        if _usuario_es_protegido(usuario):
+            messages.error(request, 'Este usuario del sistema no puede ser desactivado.')
             return redirect('users:empleado_list')
 
         usuario.is_active = False
@@ -300,11 +316,13 @@ class EmpleadoDeleteView(AdminRequiredMixin, DetailView):
 
 class EmpleadoActivateView(AdminRequiredMixin, DetailView):
     """Reactiva un usuario previamente desactivado."""
-
     model = User
 
     def post(self, request, *args, **kwargs):
         usuario = self.get_object()
+        if _usuario_es_protegido(usuario):
+            messages.error(request, 'Este usuario no puede ser modificado.')
+            return redirect('users:empleado_list')
         usuario.is_active = True
         usuario.save(update_fields=['is_active'])
         if hasattr(usuario, 'profile'):
