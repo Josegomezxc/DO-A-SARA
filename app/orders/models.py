@@ -32,12 +32,27 @@ class Order(models.Model):
         (METODO_QR, 'QR'),
     )
 
+    TIPO_IDENTIFICACION_CHOICES = (
+        ('04', 'RUC'),
+        ('05', 'Cédula'),
+        ('06', 'Pasaporte'),
+        ('07', 'Consumidor Final'),
+    )
+
     numero = models.CharField('Número', max_length=20, unique=True, blank=True)
     vendedor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         related_name='ventas', verbose_name='Vendedor',
     )
     cliente = models.CharField('Cliente', max_length=120, blank=True)
+    tipo_identificacion = models.CharField(
+        'Tipo de identificación', max_length=2, choices=TIPO_IDENTIFICACION_CHOICES,
+        blank=True, null=True
+    )
+    identificacion = models.CharField('Identificación', max_length=20, blank=True, null=True)
+    direccion = models.CharField('Dirección', max_length=300, blank=True, null=True)
+    telefono = models.CharField('Teléfono', max_length=30, blank=True, null=True)
+    email = models.EmailField('Email', blank=True, null=True)
     estado = models.CharField(
         'Estado', max_length=15, choices=ESTADO_CHOICES,
         default=ESTADO_PENDIENTE, db_index=True,
@@ -55,6 +70,14 @@ class Order(models.Model):
     total = models.DecimalField(
         'Total', max_digits=12, decimal_places=2, default=Decimal('0.00')
     )
+    
+    # Campos para facturación electrónica (SRI)
+    secuencial_factura = models.CharField('Secuencial de factura', max_length=17, blank=True, null=True)
+    clave_acceso = models.CharField('Clave de acceso', max_length=49, blank=True, null=True)
+    subtotal_iva = models.DecimalField('Subtotal IVA', max_digits=12, decimal_places=2, blank=True, null=True)
+    subtotal_cero = models.DecimalField('Subtotal Cero', max_digits=12, decimal_places=2, blank=True, null=True)
+    valor_iva = models.DecimalField('Valor IVA', max_digits=12, decimal_places=2, blank=True, null=True)
+
     notas = models.TextField('Notas especiales', blank=True)
     creado = models.DateTimeField('Creado', auto_now_add=True, db_index=True)
     actualizado = models.DateTimeField('Actualizado', auto_now=True)

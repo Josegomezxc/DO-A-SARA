@@ -13,18 +13,27 @@
 }
 
 .order-filter-form .filter-q {
-  flex: 1 1 220px;
-  max-width: 320px;
-  min-width: 220px;
+  flex: 1 1 100%;
 }
 
-.order-filter-form .filter-estado {
-  width: auto;
-  min-width: 170px;
-  margin-left: auto;
-}
-
+.order-filter-form .filter-estado,
 .order-filter-form .filter-fecha {
-  width: auto;
-  min-width: 150px;
+  flex: 1 1 140px;
+}
+
+@media (min-width: 768px) {
+  .order-filter-form .filter-q {
+    flex: 1 1 220px;
+    max-width: 320px;
+    min-width: 220px;
+  }
+  .order-filter-form .filter-estado {
+    margin-left: auto;
+    flex-grow: 0;
+    min-width: 170px;
+  }
+  .order-filter-form .filter-fecha {
+    flex-grow: 0;
+    min-width: 150px;
+  }
 }

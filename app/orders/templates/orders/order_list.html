@@ -37,8 +37,19 @@
                 <option value="">Estado: todos</option>
                 {% for k, v in estados %}<option value="{{ k }}" {% if estado == k %}selected{% endif %}>{{ v }}</option>{% endfor %}
             </select>
-            <input type="date" name="desde" value="{{ desde }}" class="form-control filter-auto filter-fecha" title="Desde" aria-label="Desde">
-            <input type="date" name="hasta" value="{{ hasta }}" class="form-control filter-auto filter-fecha" title="Hasta" aria-label="Hasta">
+            <div class="input-group filter-auto filter-fecha">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white text-muted border-right-0">Desde</span>
+                </div>
+                <input type="date" name="desde" value="{{ desde }}" class="form-control border-left-0" title="Desde" aria-label="Desde">
+            </div>
+
+            <div class="input-group filter-auto filter-fecha">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white text-muted border-right-0">Hasta</span>
+                </div>
+                <input type="date" name="hasta" value="{{ hasta }}" class="form-control border-left-0" title="Hasta" aria-label="Hasta">
+            </div>
             <noscript>
                 <button class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
             </noscript>

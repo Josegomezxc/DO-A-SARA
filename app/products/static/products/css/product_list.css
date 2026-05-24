@@ -16,20 +16,31 @@
 }
 
 .filter-inline .filter-search-input {
-  flex: 1 1 var(--filter-search-min);
-  max-width: var(--filter-search-max);
-  min-width: var(--filter-search-min);
+  flex: 1 1 100%;
 }
 
-.filter-inline .filter-select-cat {
-  width: auto;
-  min-width: var(--filter-select-cat-min);
-  margin-left: auto;
-}
-
+.filter-inline .filter-select-cat,
 .filter-inline .filter-select-estado {
-  width: auto;
-  min-width: var(--filter-select-estado-min);
+  flex: 1 1 140px;
+}
+
+@media (min-width: 768px) {
+  .filter-inline .filter-search-input {
+    flex: 1 1 var(--filter-search-min);
+    max-width: var(--filter-search-max);
+    min-width: var(--filter-search-min);
+  }
+
+  .filter-inline .filter-select-cat {
+    margin-left: auto;
+    flex-grow: 0;
+    min-width: var(--filter-select-cat-min);
+  }
+
+  .filter-inline .filter-select-estado {
+    flex-grow: 0;
+    min-width: var(--filter-select-estado-min);
+  }
 }
 
 /* Tabla */
