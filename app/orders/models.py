@@ -109,7 +109,14 @@ class Order(models.Model):
         agg = self.items.aggregate(total=models.Sum('subtotal'))
         self.subtotal = agg['total'] or Decimal('0.00')
         self.total = max(self.subtotal - self.descuento, Decimal('0.00'))
-        self.save(update_fields=['subtotal', 'total', 'actualizado'])
+        # Desglose SRI: todos los ítems pagan IVA por ahora
+        self.subtotal_iva = self.subtotal
+        self.subtotal_cero = Decimal('0.00')
+        self.valor_iva = self.iva_subtotal
+        self.save(update_fields=[
+            'subtotal', 'total', 'subtotal_iva', 'subtotal_cero',
+            'valor_iva', 'actualizado',
+        ])
 
     @transaction.atomic
     def completar(self, usuario=None):
@@ -124,17 +131,20 @@ class Order(models.Model):
         self.save(update_fields=['estado', 'actualizado'])
 
     # ---------- Desglose de IVA ----------
-    IVA_RATE = Decimal('0.15')
+    # La alícuota sale de settings (IVA_RATE), default 15% (Ecuador SRI).
+    @property
+    def iva_alicuota(self):
+        return getattr(settings, 'IVA_RATE', Decimal('0.15'))
 
     @property
     def subtotal_sin_iva(self):
-        """Subtotal sin IVA (subtotal - 15%)."""
-        return (self.subtotal - self.iva_subtotal).quantize(Decimal('0.001'))
+        """Subtotal sin IVA (subtotal - IVA)."""
+        return (self.subtotal - self.iva_subtotal).quantize(Decimal('0.01'))
 
     @property
     def iva_subtotal(self):
-        """IVA sobre el subtotal: subtotal × 15%."""
-        return (self.subtotal * self.IVA_RATE).quantize(Decimal('0.001'))
+        """IVA sobre el subtotal: subtotal × alícuota."""
+        return (self.subtotal * self.iva_alicuota).quantize(Decimal('0.01'))
 
 
 class OrderItem(models.Model):
@@ -146,10 +156,10 @@ class OrderItem(models.Model):
     producto = models.ForeignKey(
         Product, on_delete=models.PROTECT, related_name='ventas_items'
     )
-    cantidad = models.DecimalField(
-        'Cantidad', max_digits=10, decimal_places=2,
-        default=Decimal('1.00'),
-        validators=[MinValueValidator(Decimal('0.01'))],
+    cantidad = models.PositiveIntegerField(
+        'Cantidad',
+        default=1,
+        validators=[MinValueValidator(1)],
     )
     precio_unitario = models.DecimalField(
         'Precio unitario', max_digits=10, decimal_places=2,

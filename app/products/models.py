@@ -33,8 +33,23 @@ class Category(models.Model):
         return self.nombre
 
     def save(self, *args, **kwargs):
+        # Orden automático: al crear sin orden explícito, va al final.
+        if not self.pk and not self.orden:
+            max_orden = Category.objects.aggregate(
+                m=models.Max('orden')
+            )['m'] or 0
+            self.orden = max_orden + 1
+        # Slug automático y único (evita IntegrityError si colisiona).
         if not self.slug:
-            self.slug = slugify(self.nombre)
+            base = slugify(self.nombre) or 'categoria'
+            slug = base
+            contador = 2
+            exists = Category.objects.filter(slug=slug).exists()
+            while exists:
+                slug = f'{base}-{contador}'
+                contador += 1
+                exists = Category.objects.filter(slug=slug).exists()
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

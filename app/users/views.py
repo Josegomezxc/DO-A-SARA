@@ -1,12 +1,15 @@
 """Vistas de la app de usuarios."""
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.cache import cache
 from django.db.models import Count, Q, Sum
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -15,7 +18,9 @@ from django.views.generic import (
 )
 
 from .decorators import AdminRequiredMixin, _es_superowner
-from .forms import EmpleadoCreateForm, EmpleadoEditForm, StyledAuthenticationForm
+from .forms import (
+    EmpleadoCreateForm, EmpleadoEditForm, PerfilForm, StyledAuthenticationForm,
+)
 from .models import Profile
 
 
@@ -89,13 +94,56 @@ class CustomLoginView(LoginView):
     authentication_form = StyledAuthenticationForm
     redirect_authenticated_user = True
 
+    @property
+    def max_attempts(self):
+        return getattr(settings, 'LOGIN_MAX_ATTEMPTS', 5)
+
+    @property
+    def cooldown(self):
+        return getattr(settings, 'LOGIN_COOLDOWN_SECONDS', 300)
+
+    def _client_ip(self):
+        xff = self.request.META.get('HTTP_X_FORWARDED_FOR', '')
+        if xff:
+            return xff.split(',')[0].strip()
+        return self.request.META.get('REMOTE_ADDR', '') or 'desconocida'
+
+    def _fail_key(self):
+        return f'login_fail:{self._client_ip()}'
+
+    def _limpiar_intentos(self):
+        cache.delete(self._fail_key())
+
     def form_valid(self, form):
+        # Reset del contador de intentos fallidos al loguear bien
+        self._limpiar_intentos()
         response = super().form_valid(form)
         messages.success(
             self.request,
             f'Bienvenido/a {self.request.user.get_full_name() or self.request.user.username}!',
         )
         return response
+
+    def form_invalid(self, form):
+        key = self._fail_key()
+        intentos = cache.get(key, 0) + 1
+
+        # Con el máximo de fallos, bloqueo por cooldown
+        if intentos >= self.max_attempts:
+            cache.set(key, intentos, self.cooldown)
+            messages.error(
+                self.request,
+                'Demasiados intentos fallidos. Esperá unos minutos antes de volver a intentarlo.',
+            )
+            return HttpResponseRedirect(reverse_lazy('users:login'))
+
+        cache.set(key, intentos, self.cooldown)
+        restantes = self.max_attempts - intentos
+        messages.error(
+            self.request,
+            f'Usuario o contraseña incorrectos. Te quedan {restantes} intento(s).',
+        )
+        return super().form_invalid(form)
 
 
 class CustomLogoutView(LogoutView):
@@ -337,14 +385,18 @@ class EmpleadoActivateView(AdminRequiredMixin, DetailView):
 
 @login_required
 def perfil_view(request):
-    """Vista del perfil del usuario actual."""
+    """Vista del perfil del usuario actual.
+
+    Usa PerfilForm: no se puede cambiar rol ni estado (evita escalada
+    de privilegios y autodesactivación).
+    """
     profile = request.user.profile
     if request.method == 'POST':
-        form = EmpleadoEditForm(request.POST, instance=request.user)
+        form = PerfilForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Perfil actualizado.')
             return redirect('users:perfil')
     else:
-        form = EmpleadoEditForm(instance=request.user)
+        form = PerfilForm(instance=request.user)
     return render(request, 'users/perfil.html', {'form': form, 'profile': profile})

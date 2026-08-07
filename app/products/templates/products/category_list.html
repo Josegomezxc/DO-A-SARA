@@ -45,7 +45,7 @@
                 <tbody>
                     {% for c in categorias %}
                     <tr>
-                        <td class="text-muted">{{ c.orden }}</td>
+                        <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <span class="cat-icon mr-3" style="background:{{ c.color }};">

@@ -6,8 +6,8 @@
 # las trae pip automáticamente al instalar las de abajo.
 # ============================================================
 
-# Framework principal
-Django>=4.2,<7.0
+# Framework principal (fijado al major actual para evitar breaks)
+Django>=6.1,<6.2
 
 # Driver de PostgreSQL (psycopg2 con binarios precompilados)
 psycopg2-binary>=2.9

@@ -4,7 +4,11 @@ Sistema de gestion de puesto de ventas de papas fritas y hamburguesas.
 """
 
 import os
+import sys
+from decimal import Decimal
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,12 +43,24 @@ if _env_file.exists():
         os.environ.setdefault(k.strip(), v.strip())
 
 
-SECRET_KEY = env(
-    'SECRET_KEY',
-    'django-insecure-fohrtxpop*pc4oj&jm97#t)z19p(gb3@6ojy2-f)_s)i2k4p_i',
+# DEBUG: por defecto True solo con runserver local; False en cualquier
+# otro entorno (gunicorn, uwsgi, etc.). En producción usar DEBUG=False.
+DEBUG = env(
+    'DEBUG',
+    'True' if 'runserver' in sys.argv else 'False',
+    cast=bool,
 )
 
-DEBUG = env('DEBUG', 'True', cast=bool)
+# SECRET_KEY: obligatoria en producción. Sin ella la app no arranca.
+SECRET_KEY = env('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-only-do-not-use-in-production'
+    else:
+        raise ImproperlyConfigured(
+            'SECRET_KEY no está definida. Configurala como variable de '
+            'entorno antes de ejecutar la app en producción.'
+        )
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', 'localhost,127.0.0.1', cast='list')
 
@@ -132,7 +148,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 LANGUAGE_CODE = 'es-ar'
-TIME_ZONE = 'America/Argentina/Buenos_Aires'
+# El negocio opera en Ecuador (facturación SRI), zona horaria Guayaquil.
+TIME_ZONE = env('TIME_ZONE', 'America/Guayaquil')
 USE_I18N = True
 USE_TZ = True
 
@@ -157,7 +174,9 @@ LOGOUT_REDIRECT_URL = 'users:login'
 
 # Configuracion del negocio
 NEGOCIO_NOMBRE = env('NEGOCIO_NOMBRE', 'Doña Sara - Papas y Hamburguesas')
-STOCK_MINIMO_ALERTA = env('STOCK_MINIMO_ALERTA', '10', cast=int)
+
+# IVA (Ecuador SRI): 15%. Se puede ajustar con IVA_RATE (ej: 0.21).
+IVA_RATE = Decimal(env('IVA_RATE', '0.15'))
 
 # Mensajes Bootstrap
 from django.contrib.messages import constants as messages
@@ -193,15 +212,13 @@ SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
+# Confiar en el header X-Forwarded-Proto cuando hay proxy/load balancer
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if not DEBUG else None
+
 # Cabeceras de seguridad HTTP
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Rate limiting en login — activar en producción:
-# 1. pip install django-axes
-# 2. Agregar 'axes' a INSTALLED_APPS (antes de django.contrib.auth)
-# 3. Agregar 'axes.backends.AxesStandaloneBackend' a AUTHENTICATION_BACKENDS
-# 4. Agregar AxesMiddleware al MIDDLEWARE
-# AXES_FAILURE_LIMIT = 5          # Bloquear tras 5 intentos fallidos
-# AXES_COOLOFF_TIME = 1           # Bloqueo de 1 hora
-# AXES_RESET_ON_SUCCESS = True
+# Rate limiting en login (sin dependencias externas, usa la cache de Django)
+LOGIN_MAX_ATTEMPTS = env('LOGIN_MAX_ATTEMPTS', '5', cast=int)
+LOGIN_COOLDOWN_SECONDS = env('LOGIN_COOLDOWN_SECONDS', '300', cast=int)

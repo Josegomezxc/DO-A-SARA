@@ -5,7 +5,6 @@ from django.conf import settings
 def business_info(request):
     return {
         'NEGOCIO_NOMBRE': getattr(settings, 'NEGOCIO_NOMBRE', 'Doña Sara'),
-        'STOCK_MINIMO_ALERTA': getattr(settings, 'STOCK_MINIMO_ALERTA', 10),
     }
 
 
@@ -33,8 +32,12 @@ def topbar_notifs(request):
     if not es_admin:
         pendientes_qs = pendientes_qs.filter(vendedor=request.user)
 
-    alertas_count = pendientes_qs.count()
-    alertas = pendientes_qs.select_related('vendedor').order_by('-creado')[:5]
+    # Una sola query salvo que haya más de 5 pendientes (entonces sí contamos)
+    alertas = list(pendientes_qs.select_related('vendedor').order_by('-creado')[:5])
+    if len(alertas) == 5:
+        alertas_count = pendientes_qs.count()
+    else:
+        alertas_count = len(alertas)
 
     # Mensajes: por ahora vacío (lista lista para extender)
     return {

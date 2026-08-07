@@ -83,7 +83,7 @@ class EmpleadoCreateForm(forms.Form):
 
 
 class EmpleadoEditForm(forms.ModelForm):
-    """Formulario de edición: no toca contraseña, solo estado y rol."""
+    """Formulario de edición (solo admin): no toca contraseña, solo estado y rol."""
 
     rol = forms.ChoiceField(
         choices=[
@@ -119,3 +119,25 @@ class EmpleadoEditForm(forms.ModelForm):
         if commit:
             profile.save()
         return user
+
+
+class PerfilForm(forms.ModelForm):
+    """Autoedición del propio perfil.
+
+    NO incluye rol ni is_active: un usuario jamás puede cambiarse su
+    propio rol (evita escalada de privilegios) ni desactivarse solo.
+    """
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '150'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '150'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'first_name': 'Nombre',
+            'last_name': 'Apellido',
+            'email': 'Email',
+        }

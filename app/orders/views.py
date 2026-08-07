@@ -1,5 +1,6 @@
 """Vistas del módulo de pedidos."""
 import json
+from datetime import date as date_cls
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
@@ -16,6 +17,18 @@ from app.users.decorators import EmpleadoRequiredMixin
 
 from .forms import OrderEditForm
 from .models import Order, OrderItem
+
+
+def _pedidos_visibles(user):
+    """Pedidos que puede ver/operar un usuario.
+
+    Admins y superuser ven todos; empleados solo los suyos.
+    """
+    qs = Order.objects.all()
+    profile = getattr(user, 'profile', None)
+    if not (user.is_superuser or (profile and profile.es_admin)):
+        qs = qs.filter(vendedor=user)
+    return qs
 
 
 # ---------- POS (punto de venta) ----------
@@ -71,6 +84,10 @@ def pos_crear_pedido(request):
     if not isinstance(data, dict):
         return JsonResponse({'ok': False, 'error': 'Formato inválido.'}, status=400)
 
+    # Usuarios desactivados no pueden cargar pedidos
+    if not request.user.is_active:
+        return JsonResponse({'ok': False, 'error': 'Tu cuenta está inactiva.'}, status=403)
+
     items = data.get('items') or []
     if not isinstance(items, list) or not items:
         return JsonResponse({'ok': False, 'error': 'Agregá al menos un producto.'}, status=400)
@@ -86,10 +103,19 @@ def pos_crear_pedido(request):
         return JsonResponse({'ok': False, 'error': 'Descuento inválido.'}, status=400)
     if descuento < 0:
         return JsonResponse({'ok': False, 'error': 'El descuento no puede ser negativo.'}, status=400)
-    completar = bool(data.get('completar', True))
+    # "completar" solo se acepta como booleano real (true/false).
+    # Un string como "false" NO debe interpretarse como verdadero.
+    completar_raw = data.get('completar', True)
+    if isinstance(completar_raw, str):
+        completar = completar_raw.strip().lower() in ('true', '1', 'yes', 'si', 'sí')
+    elif isinstance(completar_raw, bool):
+        completar = completar_raw
+    else:
+        completar = bool(completar_raw)
 
     # Validamos TODOS los items antes de tocar la base
     items_validos = []
+    subtotal_esperado = Decimal('0.00')
     for idx, it in enumerate(items, start=1):
         if not isinstance(it, dict):
             return JsonResponse({'ok': False, 'error': f'Ítem #{idx} inválido.'}, status=400)
@@ -108,6 +134,14 @@ def pos_crear_pedido(request):
             return JsonResponse({'ok': False, 'error': f'La cantidad de "{producto.nombre}" supera el máximo ({MAX_CANTIDAD_POS}).'}, status=400)
         nota = str(it.get('nota', ''))[:200]
         items_validos.append((producto, cantidad, nota))
+        subtotal_esperado += (producto.precio * cantidad)
+
+    # El descuento no puede superar el subtotal (mismo criterio que la edición)
+    if descuento > subtotal_esperado:
+        return JsonResponse({
+            'ok': False,
+            'error': f'El descuento (${descuento}) no puede ser mayor al subtotal (${subtotal_esperado}).',
+        }, status=400)
 
     with transaction.atomic():
         pedido = Order.objects.create(
@@ -133,9 +167,19 @@ def pos_crear_pedido(request):
         'ok': True,
         'pedido_id': pedido.pk,
         'numero': pedido.numero,
-        'total': str(pedido.total),
+        'total': str(pedido.total.quantize(Decimal('0.01'))),
         'ticket_url': f'/pedidos/{pedido.pk}/ticket/?auto=1',
     })
+
+
+def _parsear_fecha(valor):
+    """Convierte 'AAAA-MM-DD' a date; devuelve None si el formato es inválido."""
+    if not valor:
+        return None
+    try:
+        return date_cls.fromisoformat(valor.strip())
+    except (ValueError, TypeError):
+        return None
 
 
 # ---------- Listado y detalle ----------
@@ -147,11 +191,7 @@ class OrderListView(EmpleadoRequiredMixin, ListView):
     paginate_by = 8
 
     def get_queryset(self):
-        qs = Order.objects.select_related('vendedor').order_by('-creado')
-        # Empleados ven solo sus pedidos; admins ven todos
-        profile = getattr(self.request.user, 'profile', None)
-        if not (self.request.user.is_superuser or (profile and profile.es_admin)):
-            qs = qs.filter(vendedor=self.request.user)
+        qs = _pedidos_visibles(self.request.user).select_related('vendedor').order_by('-creado')
 
         q = self.request.GET.get('q', '').strip()
         estado = self.request.GET.get('estado', '').strip()
@@ -165,10 +205,13 @@ class OrderListView(EmpleadoRequiredMixin, ListView):
             )
         if estado:
             qs = qs.filter(estado=estado)
-        if desde:
-            qs = qs.filter(creado__date__gte=desde)
-        if hasta:
-            qs = qs.filter(creado__date__lte=hasta)
+        # Fechas inválidas se ignoran (no rompen la búsqueda con 500)
+        fecha_desde = _parsear_fecha(desde)
+        fecha_hasta = _parsear_fecha(hasta)
+        if fecha_desde:
+            qs = qs.filter(creado__date__gte=fecha_desde)
+        if fecha_hasta:
+            qs = qs.filter(creado__date__lte=fecha_hasta)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -189,13 +232,31 @@ class OrderDetailView(EmpleadoRequiredMixin, DetailView):
     context_object_name = 'pedido'
 
     def get_queryset(self):
-        return Order.objects.select_related('vendedor').prefetch_related('items__producto')
+        # Empleados solo ven sus propios pedidos
+        return _pedidos_visibles(self.request.user).select_related(
+            'vendedor'
+        ).prefetch_related('items__producto')
 
 
 class OrderUpdateView(EmpleadoRequiredMixin, UpdateView):
     model = Order
     form_class = OrderEditForm
     template_name = 'orders/order_edit.html'
+
+    def get_queryset(self):
+        return _pedidos_visibles(self.request.user)
+
+    def dispatch(self, request, *args, **kwargs):
+        pedido = self.get_object()
+        # Solo se editan pedidos pendientes (integridad contable)
+        if pedido.estado != Order.ESTADO_PENDIENTE:
+            messages.error(
+                request,
+                f'Solo se pueden editar pedidos pendientes ("{pedido.numero}" '
+                f'está {pedido.get_estado_display().lower()}).',
+            )
+            return redirect(pedido)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -207,19 +268,33 @@ class OrderUpdateView(EmpleadoRequiredMixin, UpdateView):
         return response
 
 
+@login_required
 def order_ticket(request, pk):
-    """Vista del ticket imprimible."""
+    """Vista del ticket imprimible (solo usuarios autenticados, cada uno sus pedidos)."""
     pedido = get_object_or_404(
-        Order.objects.select_related('vendedor').prefetch_related('items__producto'),
+        _pedidos_visibles(request.user).select_related('vendedor')
+        .prefetch_related('items__producto'),
         pk=pk,
     )
-    return render(request, 'orders/ticket.html', {'pedido': pedido})
+    iva_pct = int(round(float(pedido.iva_alicuota) * 100))
+    return render(
+        request,
+        'orders/ticket.html',
+        {'pedido': pedido, 'iva_pct': iva_pct},
+    )
 
 
 @login_required
 @require_POST
 def order_completar(request, pk):
-    pedido = get_object_or_404(Order, pk=pk)
+    pedido = get_object_or_404(_pedidos_visibles(request.user), pk=pk)
+    if pedido.estado != Order.ESTADO_PENDIENTE:
+        messages.error(
+            request,
+            f'Solo se pueden completar pedidos pendientes ("{pedido.numero}" '
+            f'está {pedido.get_estado_display().lower()}).',
+        )
+        return redirect(pedido)
     pedido.completar(usuario=request.user)
     messages.success(request, f'Pedido {pedido.numero} completado.')
     return redirect(pedido)
@@ -228,7 +303,14 @@ def order_completar(request, pk):
 @login_required
 @require_POST
 def order_cancelar(request, pk):
-    pedido = get_object_or_404(Order, pk=pk)
+    pedido = get_object_or_404(_pedidos_visibles(request.user), pk=pk)
+    if pedido.estado != Order.ESTADO_PENDIENTE:
+        messages.error(
+            request,
+            f'Solo se pueden cancelar pedidos pendientes ("{pedido.numero}" '
+            f'está {pedido.get_estado_display().lower()}).',
+        )
+        return redirect(pedido)
     pedido.cancelar()
     messages.warning(request, f'Pedido {pedido.numero} cancelado.')
     return redirect(pedido)
