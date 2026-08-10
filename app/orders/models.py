@@ -45,6 +45,8 @@ class Order(models.Model):
         related_name='ventas', verbose_name='Vendedor',
     )
     cliente = models.CharField('Cliente', max_length=120, blank=True)
+    nombres = models.CharField('Nombres', max_length=60, blank=True, default='')
+    apellidos = models.CharField('Apellidos', max_length=60, blank=True, default='')
     tipo_identificacion = models.CharField(
         'Tipo de identificación', max_length=2, choices=TIPO_IDENTIFICACION_CHOICES,
         blank=True, null=True
@@ -145,6 +147,44 @@ class Order(models.Model):
     def iva_subtotal(self):
         """IVA sobre el subtotal: subtotal × alícuota."""
         return (self.subtotal * self.iva_alicuota).quantize(Decimal('0.01'))
+
+
+class Cliente(models.Model):
+    """Cliente habitual: datos del receptor acumulados entre ventas.
+
+    Se guarda automáticamente al cobrar (nunca para Consumidor Final) y
+    se identifica por (tipo_identificacion, identificacion), que es único:
+    la cédula/RUC/pasaporte no se repite entre personas.
+    """
+
+    TIPO_CONSUMIDOR = '07'
+
+    tipo_identificacion = models.CharField(
+        'Tipo de identificación', max_length=2, choices=Order.TIPO_IDENTIFICACION_CHOICES,
+    )
+    identificacion = models.CharField('Identificación', max_length=20)
+    nombre = models.CharField('Nombre / Razón social', max_length=120)
+    nombres = models.CharField('Nombres', max_length=60, blank=True, default='')
+    apellidos = models.CharField('Apellidos', max_length=60, blank=True, default='')
+    direccion = models.CharField('Dirección', max_length=300, blank=True, default='')
+    email = models.EmailField('Email', blank=True, null=True)
+    telefono = models.CharField('Teléfono', max_length=30, blank=True, default='')
+    creado = models.DateTimeField('Creado', auto_now_add=True)
+    actualizado = models.DateTimeField('Actualizado', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Cliente'
+        verbose_name_plural = 'Clientes'
+        ordering = ['nombre']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tipo_identificacion', 'identificacion'],
+                name='uniq_cliente_tipo_identificacion',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.nombre} ({self.identificacion})'
 
 
 class OrderItem(models.Model):

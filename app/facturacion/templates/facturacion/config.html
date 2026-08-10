@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración de facturación{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'facturacion:comprobante_list' %}">Facturación</a></li>
+<li class="breadcrumb-item active">Configuración</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de configuración">
+    <h1><i class="fas fa-cog"></i> Configuración de facturación</h1>
+    <p class="lead">Datos fiscales del negocio para emitir facturas al SRI.</p>
+    <div class="hero-actions">
+        <a href="{% url 'facturacion:comprobante_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card modern-card mb-4">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-building text-primary"></i> Datos fiscales del emisor</h2>
+            </div>
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <div class="card-body">
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors|join:", " }}</div>
+                    {% endif %}
+                    <div class="row">
+                        {% for field in form %}
+                        <div class="form-group col-md-6">
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check mt-md-4">
+                                    {{ field }}
+                                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                            {% elif field.name == 'clave_firma' %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                <div class="campo-wrap">
+                                    {{ field }}
+                                    <button type="button" class="campo-toggle"
+                                            data-toggle-password="#{{ field.id_for_label }}" tabindex="-1"
+                                            aria-label="Mostrar u ocultar clave de la firma"
+                                            title="Mostrar u ocultar clave de la firma">
+                                        <i class="far fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            {% else %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            {% endif %}
+                            {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                            {% if field.errors %}<small class="text-danger d-block">{{ field.errors|join:", " }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between">
+                    <a href="{% url 'facturacion:comprobante_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-action-primary">
+                        <i class="fas fa-save"></i> Guardar configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-key text-primary"></i> Firma electrónica</h2>
+            </div>
+            <div class="card-body">
+                {% if emisor.tiene_firma %}
+                <p class="text-success">
+                    <i class="fas fa-check-circle"></i> Firma cargada: <strong>{{ emisor.firma.name }}</strong>
+                </p>
+                {% else %}
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-exclamation-triangle"></i> Todavía no hay firma configurada.
+                    Las facturas no podrán emitirse hasta cargar el .p12.
+                </div>
+                {% endif %}
+                <p class="small text-muted">
+                    Para probar el flujo completo sin firma real, ejecutá en la terminal:
+                </p>
+                <pre class="bg-light border rounded p-2 small">python manage.py crear_firma_prueba</pre>
+                <p class="small text-muted mb-0">
+                    El RUC <code>9999999999999</code> es un placeholder: el SRI rechazará la
+                    certificación del emisor hasta configurar el RUC y la firma reales.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-info-circle text-primary"></i> Cómo funciona</h2>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>En el POS, el vendedor activa <em>"¿Cliente pide factura?"</em> y carga los datos del receptor.</li>
+                    <li>Al completar el pedido, el sistema genera y firma el XML y lo envía al SRI.</li>
+                    <li>Si el SRI no responde, el comprobante queda <em>pendiente</em> y se reintenta con
+                        <code>python manage.py facturacion_pendientes</code> (puede programarse como tarea periódica).</li>
+                    <li>La autorización se consulta automáticamente; si queda <em>en proceso</em>, se consulta después.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

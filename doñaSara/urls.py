@@ -14,6 +14,8 @@ urlpatterns = [
     path('cuentas/', include('app.users.urls', namespace='users')),
     path('productos/', include('app.products.urls', namespace='products')),
     path('pedidos/', include('app.orders.urls', namespace='orders')),
+    path('facturacion/', include('app.facturacion.urls', namespace='facturacion')),
+    path('caja/', include('app.caja.urls', namespace='caja')),
 ]
 
 if settings.DEBUG:

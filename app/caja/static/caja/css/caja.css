@@ -1,0 +1,78 @@
+.caja-vuelto {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: .35rem;
+    padding: .5rem .75rem;
+    color: #1b5e20;
+}
+
+#vuelto-amount {
+    font-size: 1.1rem;
+}
+
+/* ---------- Cliente habitual: búsqueda por identificación ---------- */
+
+.caja-cliente-search {
+    position: relative;
+}
+
+.caja-cliente-cargado {
+    margin-top: .5rem;
+    padding: .4rem .6rem;
+    border-radius: .35rem;
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    color: #1b5e20;
+    font-size: .875rem;
+}
+
+.caja-clientes-dropdown {
+    position: absolute;
+    z-index: 1050;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: .25rem;
+    max-height: 240px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .35rem;
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+.caja-cliente-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .75rem;
+    width: 100%;
+    padding: .5rem .75rem;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: .9rem;
+}
+
+.caja-cliente-item:hover,
+.caja-cliente-item:focus {
+    background-color: #f1f5f9;
+    outline: none;
+}
+
+.caja-cliente-item span {
+    color: #6c757d;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.caja-cliente-item + .caja-cliente-item {
+    border-top: 1px solid #f1f5f9;
+}
+
+.caja-clientes-empty {
+    padding: .5rem .75rem;
+    color: #6c757d;
+    font-size: .875rem;
+}

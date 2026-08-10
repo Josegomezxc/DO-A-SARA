@@ -79,8 +79,14 @@
                                 <i class="fas fa-pencil-alt"></i> Editar
                             </a>
                             {% if c.activa %}
-                            <a href="{% url 'products:category_delete' c.pk %}" class="btn btn-sm btn-outline-warning"
-                                title="Desactivar">
+                            <a href="{% url 'products:category_delete' c.pk %}" class="btn btn-sm btn-outline-warning btn-confirm"
+                                title="Desactivar"
+                                data-confirm-titulo="¿Desactivar categoría?"
+                                data-confirm="¿Desactivar la categoría {{ c.nombre }}? No aparecerá en el menú y sus productos se desactivan."
+                                data-confirm-boton="Sí, desactivar"
+                                data-confirm-clase="btn-danger"
+                                data-confirm-icono="fas fa-toggle-off"
+                                data-confirm-url="{% url 'products:category_delete' c.pk %}">
                                 <i class="fas fa-toggle-off"></i> Desactivar
                             </a>
                             {% else %}

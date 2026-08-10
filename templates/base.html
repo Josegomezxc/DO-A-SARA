@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#2563EB">
 
+    {# Token CSRF para JS: CSRF_COOKIE_HTTPONLY=True impide leer la cookie #}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
     {# SEO (sistema interno: noindex) #}
     <meta name="description" content="{% block meta_description %}Sistema de gestión interno de {{ NEGOCIO_NOMBRE }} — punto de venta para hamburguesas y salchipapas.{% endblock %}">
     <meta name="author" content="{{ NEGOCIO_NOMBRE }}">
@@ -85,6 +88,13 @@
                 </a>
             </li>
 
+            <li class="nav-item {% if current_ns == 'caja' %}active{% endif %}">
+                <a class="nav-link" href="{% url 'caja:index' %}" {% if current_ns == 'caja' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-coins" aria-hidden="true"></i>
+                    <span>Caja</span>
+                </a>
+            </li>
+
             {% if user.is_superuser or user.profile.es_admin %}
             {# Nav admin: 3 módulos extra #}
             <hr class="sidebar-divider">
@@ -108,6 +118,13 @@
                 <a class="nav-link" href="{% url 'users:empleado_list' %}" {% if current_ns == 'users' and 'empleado' in current_url %}aria-current="page"{% endif %}>
                     <i class="fas fa-fw fa-users" aria-hidden="true"></i>
                     <span>Empleados</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if current_ns == 'facturacion' %}active{% endif %}">
+                <a class="nav-link" href="{% url 'facturacion:comprobante_list' %}" {% if current_ns == 'facturacion' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-fw fa-file-invoice" aria-hidden="true"></i>
+                    <span>Facturación</span>
                 </a>
             </li>
             {% endif %}
@@ -316,6 +333,25 @@
     </div>
 </div>
 
+{# Popup flotante de confirmación para acciones riesgosas (arriba centrado, estilo Bootstrap 4) #}
+<div class="confirm-popup" id="confirmModal" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h2 class="modal-title h5 mb-0" id="confirmModalLabel">¿Confirmar acción?</h2>
+            <button class="close" type="button" id="confirmModalCerrar" aria-label="Cerrar">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="card-body" id="confirmModalMensaje">¿Estás seguro?</div>
+        <div class="card-footer bg-white d-flex justify-content-end">
+            <button class="btn btn-secondary" type="button" id="confirmModalCancelar">Cancelar</button>
+            <button class="btn btn-danger ml-2" type="button" id="confirmModalBtn">
+                <i class="fas fa-check fa-sm fa-fw" aria-hidden="true"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
 {% else %}
     {% if messages %}
         <section aria-label="Mensajes del sistema" aria-live="polite">
@@ -337,6 +373,12 @@ al resize <480px que abría el menú al hacer scroll en mobile)
 
 {# JS propio (incluye sidebar toggle + scroll-to-top) #}
 <script src="{% static 'users/js/main.js' %}"></script>
+
+{# Validación de formularios en tiempo real (se activa sola con [data-validar]) #}
+<script src="{% static 'users/js/validacion.js' %}"></script>
+
+{# Ver/ocultar contraseña (se activa sola con [data-toggle-password]) #}
+<script src="{% static 'users/js/toggle-password.js' %}"></script>
 
 {% block extra_scripts %}{% endblock %}
 

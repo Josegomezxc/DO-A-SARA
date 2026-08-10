@@ -1,0 +1,19 @@
+/* ============================================================
+   Estilos específicos del panel de facturación (SRI)
+   Las clases modern-card, page-hero, info-dl vienen del CSS
+   global de users/css/style.css.
+   ============================================================ */
+
+/* Visor de XML (detalle de comprobante): área con scroll vertical */
+.xml-viewer {
+    max-height: 320px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Filtros del listado de logs SRI */
+.log-filters .form-control {
+    max-width: 320px;
+}
+

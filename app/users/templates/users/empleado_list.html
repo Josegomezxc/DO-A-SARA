@@ -85,7 +85,14 @@
                             <a href="{% url 'users:empleado_update' emp.pk %}" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fas fa-pencil-alt"></i></a>
                             {% if emp.pk != user.pk %}
                                 {% if emp.is_active %}
-                                    <a href="{% url 'users:empleado_delete' emp.pk %}" class="btn btn-sm btn-outline-warning" title="Desactivar"><i class="fas fa-user-slash"></i></a>
+                                    <a href="{% url 'users:empleado_delete' emp.pk %}" class="btn btn-sm btn-outline-warning btn-confirm"
+                                        title="Desactivar"
+                                        data-confirm-titulo="¿Desactivar empleado?"
+                                        data-confirm="¿Desactivar a {{ emp.get_full_name|default:emp.username }}? Perderá el acceso al sistema. Podés reactivarlo después."
+                                        data-confirm-boton="Sí, desactivar"
+                                        data-confirm-clase="btn-danger"
+                                        data-confirm-icono="fas fa-user-slash"
+                                        data-confirm-url="{% url 'users:empleado_delete' emp.pk %}"><i class="fas fa-user-slash"></i></a>
                                 {% else %}
                                     <form method="post" action="{% url 'users:empleado_activate' emp.pk %}" class="d-inline">
                                         {% csrf_token %}

@@ -1,4 +1,5 @@
 """Vistas de la app de usuarios."""
+import re
 from datetime import timedelta
 
 from django.conf import settings
@@ -9,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.cache import cache
 from django.db.models import Count, Q, Sum
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -22,6 +23,29 @@ from .forms import (
     EmpleadoCreateForm, EmpleadoEditForm, PerfilForm, StyledAuthenticationForm,
 )
 from .models import Profile
+
+
+# ──────────────────────────────────────────────
+# Disponibilidad de usuario (validación en tiempo real)
+# ──────────────────────────────────────────────
+
+def verificar_usuario(request):
+    """API JSON: ¿está disponible el nombre de usuario?
+
+    Refleja las reglas de `EmpleadoCreateForm.clean_username` para
+    mostrar el resultado en vivo en el formulario.
+    """
+    username = (request.GET.get('username') or '').strip()
+    if not username:
+        return JsonResponse({'disponible': False, 'motivo': 'vacio'})
+    if not re.match(r'^[\w.@+-]{3,150}$', username):
+        return JsonResponse({'disponible': False, 'motivo': 'formato'})
+    reserved = ['owner', 'superowner', 'root', 'admin', 'administrator']
+    if username.lower() in reserved:
+        return JsonResponse({'disponible': False, 'motivo': 'reservado'})
+    if User.objects.filter(username__iexact=username).exists():
+        return JsonResponse({'disponible': False, 'motivo': 'usado'})
+    return JsonResponse({'disponible': True})
 
 
 # ──────────────────────────────────────────────

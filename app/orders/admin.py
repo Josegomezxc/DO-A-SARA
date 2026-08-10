@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Order, OrderItem
+from .models import Cliente, Order, OrderItem
 
 
 class OrderItemInline(admin.TabularInline):
@@ -8,6 +8,13 @@ class OrderItemInline(admin.TabularInline):
     extra = 0
     autocomplete_fields = ['producto']
     readonly_fields = ('subtotal',)
+
+
+@admin.register(Cliente)
+class ClienteAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'tipo_identificacion', 'identificacion', 'email', 'telefono', 'actualizado')
+    search_fields = ('identificacion', 'nombre')
+    readonly_fields = ('creado', 'actualizado')
 
 
 @admin.register(Order)

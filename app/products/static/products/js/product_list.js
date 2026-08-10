@@ -81,7 +81,12 @@
     if (activo) {
       $estado.innerHTML = '<span class="badge badge-success badge-pill">Activo</span>';
       $btnDes.classList.remove('d-none');
-      $btnDes.href = d.deleteUrl;
+      $btnDes.dataset.confirmUrl = d.deleteUrl;
+      $btnDes.dataset.confirm = '¿Desactivar ' + d.nombre + '? No aparecerá en el POS pero se conservan sus ventas históricas.';
+      $btnDes.dataset.confirmTitulo = '¿Desactivar producto?';
+      $btnDes.dataset.confirmBoton = 'Sí, desactivar';
+      $btnDes.dataset.confirmClase = 'btn-danger';
+      $btnDes.dataset.confirmIcono = 'fas fa-toggle-off';
       $formAct.classList.add('d-none');
     } else {
       $estado.innerHTML = '<span class="badge badge-secondary badge-pill">Inactivo</span>';

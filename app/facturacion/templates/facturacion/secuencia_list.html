@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Secuencias de factura{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'facturacion:comprobante_list' %}">Facturación</a></li>
+<li class="breadcrumb-item active">Secuencias</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de secuencias">
+    <h1><i class="fas fa-sort-numeric-down"></i> Secuencias de factura</h1>
+    <p class="lead">Secuenciales de facturación por año (establecimiento 001, punto de emisión 001).</p>
+    <div class="hero-actions">
+        <a href="{% url 'facturacion:comprobante_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-list-ol text-primary"></i> Secuenciales</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Año</th>
+                        <th class="text-right">Último secuencial usado</th>
+                        <th class="text-right">Próximo secuencial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in secuencias %}
+                    <tr>
+                        <td class="font-weight-bold">{{ s.anio }}</td>
+                        <td class="text-right">{{ s.ultimo }}</td>
+                        <td class="text-right">
+                            <span class="badge badge-primary">{{ s.ultimo|add:1 }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                            Todavía no se emitieron facturas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Los comprobantes rechazados pueden reemitirse reutilizando su secuencial
+    (flujo oficial de corrección del SRI). Los números se consumen por año.
+</div>
+{% endblock %}

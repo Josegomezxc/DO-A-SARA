@@ -95,6 +95,11 @@
                                 <i class="fas fa-lock login-input-icon" aria-hidden="true"></i>
                                 <input type="password" name="password" id="id_password"
                                        class="login-input" placeholder="••••••••" required autocomplete="current-password">
+                                <button type="button" class="login-input-toggle"
+                                        data-toggle-password="#id_password" tabindex="-1"
+                                        aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                                    <i class="far fa-eye" aria-hidden="true"></i>
+                                </button>
                             </div>
                         </div>
                         <button type="submit" class="login-submit">
@@ -113,5 +118,6 @@
 
     <script src="{% static 'sb-admin-2/vendor/jquery/jquery.min.js' %}"></script>
     <script src="{% static 'sb-admin-2/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'users/js/toggle-password.js' %}"></script>
 </body>
 </html>

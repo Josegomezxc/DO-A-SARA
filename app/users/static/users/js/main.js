@@ -19,10 +19,29 @@ $(function () {
     // ----- Tooltips -----
     $('[data-toggle="tooltip"]').tooltip();
 
-    // ----- Confirm para botones con data-confirm -----
+    // ----- Confirmación para acciones riesgosas (modal Bootstrap 4) -----
+    // Elementos con .btn-confirm abren #confirmModal en vez del confirm() nativo.
+    // Atributos opcionales:
+    //   data-confirm           -> mensaje del popup
+    //   data-confirm-titulo    -> título del popup
+    //   data-confirm-boton     -> texto del botón de acción
+    //   data-confirm-clase     -> clase del botón (btn-danger | btn-warning)
+    //   data-confirm-icono     -> ícono FontAwesome del botón de acción
+    //   data-confirm-url       -> si está, al aceptar hace POST a esa URL (con CSRF)
+    //   data-confirm-form      -> si está y el trigger está dentro de un <form>,
+    //                             al aceptar hace submit de ese form
     $('.btn-confirm').on('click', function (e) {
-        var msg = $(this).data('confirm') || '¿Estás seguro?';
-        if (!confirm(msg)) e.preventDefault();
+        e.preventDefault();
+        var $btn = $(this);
+        window.mostrarConfirmacion({
+            titulo: $btn.data('confirm-titulo'),
+            mensaje: $btn.data('confirm'),
+            boton: $btn.data('confirm-boton'),
+            clase: $btn.data('confirm-clase'),
+            icono: $btn.data('confirm-icono'),
+            url: $btn.data('confirm-url'),
+            form: $btn.closest('form')[0] || null,
+        });
     });
 
     // ===== Sidebar: hamburger + backdrop + close button + ESC =====
@@ -120,6 +139,11 @@ window.formatMoney = function (value) {
 };
 
 window.getCsrfToken = function () {
+    // Con CSRF_COOKIE_HTTPONLY=True la cookie no es legible por JS; el token
+    // se expone en <meta name="csrf-token"> en base.html (fallback a la cookie).
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.content) return meta.content;
+
     var name = 'csrftoken';
     var cookies = document.cookie.split(';');
     for (var i = 0; i < cookies.length; i++) {
@@ -130,3 +154,61 @@ window.getCsrfToken = function () {
     }
     return '';
 };
+
+// ===== Confirmación genérica para acciones riesgosas =====
+// window.mostrarConfirmacion({titulo, mensaje, boton, clase, icono, url, form, alAceptar})
+//   - url: POST a esa URL (con CSRF) al aceptar
+//   - form: submit de ese formulario al aceptar
+//   - alAceptar: función callback al aceptar (prioridad sobre url/form)
+window.mostrarConfirmacion = function (opciones) {
+    opciones = opciones || {};
+    var $modal = $('#confirmModal');
+    if (!$modal.length) return false;
+
+    $('#confirmModalLabel').text(opciones.titulo || '¿Confirmar acción?');
+    $('#confirmModalMensaje').text(opciones.mensaje || '¿Estás seguro?');
+
+    var $btn = $('#confirmModalBtn');
+    $btn.removeClass('btn-danger btn-warning btn-primary').addClass(opciones.clase || 'btn-danger');
+    var icono = opciones.icono ? '<i class="' + opciones.icono + ' fa-sm fa-fw" aria-hidden="true"></i> ' : '';
+    $btn.html(icono + (opciones.boton || 'Confirmar'));
+
+    $modal.data('pendiente', opciones);
+    $modal.addClass('show');
+    $modal.attr('aria-hidden', 'false');
+    return true;
+};
+
+// Ocultar el popup de confirmación
+function ocultarConfirmacion() {
+    $('#confirmModal').removeClass('show').attr('aria-hidden', 'true');
+}
+
+// Cancelar / cerrar (✕ o tecla ESC)
+$(document).on('click', '#confirmModalCancelar, #confirmModalCerrar', ocultarConfirmacion);
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') ocultarConfirmacion();
+});
+
+// Al aceptar: ejecutar la acción pendiente
+$(document).on('click', '#confirmModalBtn', function () {
+    var opciones = $('#confirmModal').data('pendiente') || {};
+    ocultarConfirmacion();
+
+    if (typeof opciones.alAceptar === 'function') {
+        opciones.alAceptar();
+        return;
+    }
+    if (opciones.form) {
+        opciones.form.submit();
+        return;
+    }
+    if (opciones.url) {
+        var $f = $('<form method="post" action="' + opciones.url + '"></form>')
+            .css('display', 'none');
+        $('<input type="hidden" name="csrfmiddlewaretoken">')
+            .val(window.getCsrfToken())
+            .appendTo($f);
+        $f.appendTo('body').submit();
+    }
+});

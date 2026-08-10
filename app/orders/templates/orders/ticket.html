@@ -30,9 +30,15 @@
         {% if pedido.cliente %}
         <div class="row small"><span>Cliente:</span> <span>{{ pedido.cliente }}</span></div>
         {% endif %}
+        {% if pedido.estado == 'pendiente' %}
+        <div class="row small highlight">
+            <span>Pago:</span> <strong>Pagar en Caja</strong>
+        </div>
+        {% else %}
         <div class="row small">
             <span>Método de pago:</span> <span>{{ pedido.get_metodo_pago_display }}</span>
         </div>
+        {% endif %}
         <hr>
 
         <!-- Detalle de productos -->
@@ -96,9 +102,14 @@
         <p class="small"><i class="fas fa-sticky-note" aria-hidden="true"></i> {{ pedido.notas }}</p>
         {% endif %}
 
+        {% if pedido.estado == 'pendiente' %}
+        <hr>
+        <p class="small center highlight"><strong>Presentá este ticket en Caja para pagar.</strong></p>
+        {% else %}
         <hr>
         <p class="small center tax-note">* Precios incluyen IVA ({{ iva_pct }}%)</p>
         <p class="small center">¡Gracias por tu compra!</p>
+        {% endif %}
     </section>
 
     <script src="{% static 'orders/js/ticket.js' %}"></script>

@@ -5,10 +5,12 @@
      2. Elegir producto (filtra por categoría)
      3. Botón "Agregar al pedido"
    Tabla con cantidad editable (>=1, sin negativos ni cero)
-   Flujo de cobro en 2 pasos:
-     a) "Guardar pedido"     -> crea el pedido en la BD, bloquea la tabla
-     b) "Imprimir factura"   -> abre el ticket con auto-print
-        + "Nuevo pedido"     -> limpia todo para empezar de cero
+   Flujo en 2 pasos:
+     a) "Guardar pedido"  -> crea el pedido PENDIENTE en la BD, bloquea la tabla
+     b) "Imprimir ticket" -> abre el ticket con auto-print
+        + "Nuevo pedido"  -> limpia todo para empezar de cero
+   El cobro y la factura se hacen en el módulo Caja (el cliente paga
+   ahí con el ticket).
 ===================================================== */
 
 (function () {
@@ -40,9 +42,9 @@
   const cart = new Map();
   const MAX_QTY = 999;
 
-  // Estado del flujo de cobro:
+  // Estado del flujo:
   //   'editando'  -> el carrito es editable, botón "Guardar pedido"
-  //   'guardado'  -> el pedido ya fue creado, botón "Imprimir factura"
+  //   'guardado'  -> el pedido ya fue creado, botón "Imprimir ticket"
   let state = 'editando';
   let savedTicketUrl = null;
   let savedNumero = null;
@@ -263,7 +265,7 @@
       if ($helpText) {
         $helpText.textContent = empty
           ? 'El botón se activa cuando agregás al menos un producto al pedido.'
-          : 'Revisá las cantidades y guardá el pedido para poder imprimir la factura.';
+          : 'Revisá las cantidades y guardá el pedido para poder imprimir el ticket.';
       }
     } else if (state === 'guardado') {
       $btnGuardar.classList.add('d-none');
@@ -273,8 +275,8 @@
       if ($btnClear) $btnClear.disabled = true;
       if ($helpText) {
         $helpText.textContent = savedNumero
-          ? `Pedido ${savedNumero} guardado. Ahora podés imprimir la factura.`
-          : 'Pedido guardado. Ahora podés imprimir la factura.';
+          ? `Pedido ${savedNumero} guardado. Imprimí el ticket: el cliente paga en Caja.`
+          : 'Pedido guardado. Imprimí el ticket: el cliente paga en Caja.';
       }
     }
   }
@@ -340,9 +342,18 @@
     $btnClear.addEventListener('click', () => {
       if (state === 'guardado') return;
       if (cart.size === 0) return;
-      if (confirm('¿Vaciar el pedido?')) {
-        cart.clear();
-        render();
+      if (window.mostrarConfirmacion) {
+        window.mostrarConfirmacion({
+          titulo: '¿Vaciar el pedido?',
+          mensaje: 'Se quitan todos los ítems del carrito.',
+          boton: 'Sí, vaciar',
+          clase: 'btn-warning',
+          icono: 'fas fa-trash',
+          alAceptar: () => {
+            cart.clear();
+            render();
+          },
+        });
       }
     });
   }
@@ -359,7 +370,6 @@
       items: Array.from(cart.values()).map(i => ({
         producto_id: i.id, cantidad: i.cantidad,
       })),
-      completar: true,
     };
 
     $btnGuardar.disabled = true;
@@ -382,15 +392,15 @@
       savedNumero = data.numero;
       state = 'guardado';
       render();
-      flash(`Pedido ${data.numero} guardado por ${formatMoney(data.total)}`);
+      flash(`Pedido ${data.numero} guardado por ${formatMoney(data.total)}. El cliente paga en Caja.`);
     } catch (err) {
-      alert('Error al guardar el pedido: ' + err.message);
+      flash('Error al guardar el pedido: ' + err.message, 'error');
       $btnGuardar.innerHTML = originalLabel;
       $btnGuardar.disabled = cart.size === 0;
     }
   }
 
-  function imprimirFactura() {
+  function imprimirTicket() {
     if (state !== 'guardado' || !savedTicketUrl) return;
     window.open(savedTicketUrl, '_blank');
   }
@@ -406,14 +416,15 @@
   }
 
   if ($btnGuardar) $btnGuardar.addEventListener('click', guardarPedido);
-  if ($btnImprimir) $btnImprimir.addEventListener('click', imprimirFactura);
+  if ($btnImprimir) $btnImprimir.addEventListener('click', imprimirTicket);
   if ($btnNuevo) $btnNuevo.addEventListener('click', reiniciar);
 
-  function flash(msg) {
+  function flash(msg, tipo) {
+    const esError = tipo === 'error';
     const toast = document.createElement('div');
-    toast.className = 'pos-toast';
-    toast.setAttribute('role', 'status');
-    toast.innerHTML = `<i class="fas fa-check-circle"></i><span>${escapeHtml(msg)}</span>`;
+    toast.className = esError ? 'pos-toast pos-toast-danger' : 'pos-toast';
+    toast.setAttribute('role', esError ? 'alert' : 'status');
+    toast.innerHTML = `<i class="${esError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'}"></i><span>${escapeHtml(msg)}</span>`;
     document.body.appendChild(toast);
     // Trigger animation entrada
     requestAnimationFrame(() => toast.classList.add('show'));

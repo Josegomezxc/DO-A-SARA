@@ -290,6 +290,27 @@ html, body {
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
+.login-input-wrap:has(.login-input-toggle) .login-input {
+  padding-right: 3rem;
+}
+
+.login-input-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.login-input-toggle:hover { color: #2563EB; }
+.login-input-toggle:focus { outline: none; color: #2563EB; }
+
 .login-input:focus {
   outline: none;
   border-color: #2563EB;

@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Facturación electrónica{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'facturacion/css/comprobante_list.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Facturación electrónica</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de facturación">
+    <h1><i class="fas fa-file-invoice"></i> Facturación electrónica</h1>
+    <p class="lead">
+        Comprobantes emitidos al SRI · Ambiente {{ ambiente_nombre }}
+        {% if emisor.ruc == '9999999999999' %}<span class="badge badge-warning">RUC de prueba</span>{% endif %}
+    </p>
+    <div class="hero-actions">
+        <a href="{% url 'facturacion:config' %}" class="btn">
+            <i class="fas fa-cog"></i> Configuración
+        </a>
+        <a href="{% url 'facturacion:log_list' %}" class="btn">
+            <i class="fas fa-clipboard-list"></i> Logs SRI
+        </a>
+        <a href="{% url 'facturacion:secuencia_list' %}" class="btn">
+            <i class="fas fa-sort-numeric-down"></i> Secuencias
+        </a>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+{% if resumen.pendientes %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    Hay <strong>{{ resumen.pendientes }}</strong> comprobante{{ resumen.pendientes|pluralize }} sin enviar
+    y <strong>{{ resumen.enviadas }}</strong> esperando autorización.
+    Ejecutá <code>python manage.py facturacion_pendientes</code> para reintentar.
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-6 col-md">
+        <div class="card modern-card text-center">
+            <div class="card-body py-3">
+                <div class="h4 mb-0 font-weight-bold">{{ resumen.total }}</div>
+                <small class="text-muted">Total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card modern-card text-center">
+            <div class="card-body py-3">
+                <div class="h4 mb-0 font-weight-bold text-success">{{ resumen.autorizadas }}</div>
+                <small class="text-muted">Autorizadas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card modern-card text-center">
+            <div class="card-body py-3">
+                <div class="h4 mb-0 font-weight-bold text-warning">{{ resumen.enviadas }}</div>
+                <small class="text-muted">Enviadas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card modern-card text-center">
+            <div class="card-body py-3">
+                <div class="h4 mb-0 font-weight-bold text-danger">{{ resumen.rechazadas }}</div>
+                <small class="text-muted">Rechazadas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md">
+        <div class="card modern-card text-center">
+            <div class="card-body py-3">
+                <div class="h4 mb-0 font-weight-bold">${{ resumen.monto_no_autorizado|floatformat:2 }}</div>
+                <small class="text-muted">Sin autorizar</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="form-row mb-3" role="search" aria-label="Filtrar comprobantes">
+    <div class="col-md-6 mb-2">
+        <input type="search" name="q" class="form-control" placeholder="Buscar por clave, número, pedido o cliente..."
+               value="{{ q }}" aria-label="Buscar">
+    </div>
+    <div class="col-md-3 mb-2">
+        <select name="estado" class="form-control" aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            {% for value, label in estados %}
+            <option value="{{ value }}" {% if estado == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3 mb-2">
+        <button class="btn btn-primary btn-block" type="submit"><i class="fas fa-search"></i> Filtrar</button>
+    </div>
+</form>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Comprobantes</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Número</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th class="text-right">Total</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Intentos</th>
+                        <th class="text-right">Fecha</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in comprobantes %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'facturacion:comprobante_detail' c.pk %}">
+                                <strong>{{ c.numero }}</strong>
+                            </a>
+                            <small class="d-block text-muted" title="{{ c.clave_acceso }}">{{ c.clave_acceso|truncatechars:24 }}</small>
+                        </td>
+                        <td><a href="{{ c.pedido.get_absolute_url }}">{{ c.pedido.numero }}</a></td>
+                        <td>{{ c.pedido.cliente|default:"Consumidor final" }}</td>
+                        <td class="text-right font-weight-bold">${{ c.pedido.total|floatformat:2 }}</td>
+                        <td class="text-center">
+                            {% if c.estado == 'autorizada' %}
+                            <span class="badge badge-success">Autorizada</span>
+                            {% elif c.estado == 'rechazada' %}
+                            <span class="badge badge-danger" title="{{ c.mensajes|truncatechars:120 }}">Rechazada</span>
+                            {% elif c.estado == 'enviada' %}
+                            <span class="badge badge-warning">Enviada</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ c.intentos }}</td>
+                        <td class="text-right text-muted small">{{ c.creado|date:"d/m/Y H:i" }}</td>
+                        <td class="text-right text-nowrap">
+                            {% if c.estado == 'pendiente' %}
+                            <form method="post" action="{% url 'facturacion:comprobante_reenviar' c.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-warning" title="Reenviar al SRI">
+                                    <i class="fas fa-paper-plane"></i> Reenviar
+                                </button>
+                            </form>
+                            {% elif c.estado == 'enviada' %}
+                            <form method="post" action="{% url 'facturacion:comprobante_consultar' c.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-primary" title="Consultar autorización">
+                                    <i class="fas fa-sync-alt"></i> Consultar
+                                </button>
+                            </form>
+                            {% endif %}
+                            <a href="{% url 'facturacion:comprobante_detail' c.pk %}" class="btn btn-sm btn-outline-secondary"
+                               title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'facturacion:comprobante_xml' c.pk %}" class="btn btn-sm btn-outline-secondary"
+                               title="Descargar XML">
+                                <i class="fas fa-file-code"></i>
+                            </a>
+                            <a href="{% url 'facturacion:comprobante_pdf' c.pk %}" target="_blank"
+                               class="btn btn-sm btn-outline-secondary" title="Imprimir factura (PDF)">
+                                <i class="fas fa-print"></i>
+                            </a>
+                            {% if c.estado != 'autorizada' %}
+                            <form method="post" action="{% url 'facturacion:comprobante_eliminar' c.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-confirm"
+                                        title="Eliminar comprobante"
+                                        data-confirm-titulo="¿Eliminar comprobante?"
+                                        data-confirm="¿Eliminar el comprobante {{ c.numero }}? El pedido {{ c.pedido.numero }} podrá facturarse de nuevo."
+                                        data-confirm-boton="Sí, eliminar"
+                                        data-confirm-clase="btn-danger"
+                                        data-confirm-icono="fas fa-trash">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                            Todavía no hay comprobantes. Se generan automáticamente al completar
+                            pedidos con <em>"¿Cliente pide factura?"</em> activado en el POS.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+{% endblock %}

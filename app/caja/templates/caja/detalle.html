@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load l10n %}
+
+{% block title %}Cobrar {{ pedido.numero }} - {{ NEGOCIO_NOMBRE }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'caja/css/caja.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'caja:index' %}">Caja</a></li>
+<li class="breadcrumb-item active">{{ pedido.numero }}</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de cobro">
+    <h1><i class="fas fa-cash-register"></i> Cobrar {{ pedido.numero }}</h1>
+    <p class="lead">Pedido tomado por {{ pedido.vendedor.get_full_name|default:pedido.vendedor.username }} · {{ pedido.creado|date:"d/m/Y H:i" }}</p>
+    <div class="hero-actions">
+        <a href="{% url 'caja:index' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        <a href="{% url 'caja:caja_ticket' pedido.pk %}" target="_blank" rel="noopener" class="btn">
+            <i class="fas fa-print"></i> Ticket
+        </a>
+    </div>
+</section>
+
+{% if errores %}
+<div class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>Corregí los siguientes errores:</strong>
+    <ul class="mb-0 mt-2">
+        {% for e in errores %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card modern-card">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Detalle del pedido</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-right">Cant.</th>
+                                <th class="text-right">Precio</th>
+                                <th class="text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pedido.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.producto.nombre }}</strong>
+                                    {% if item.nota %}<small class="d-block text-muted mt-1"><i class="fas fa-sticky-note"></i> {{ item.nota }}</small>{% endif %}
+                                </td>
+                                <td class="text-right">{{ item.cantidad|floatformat:0 }}</td>
+                                <td class="text-right">${{ item.precio_unitario|floatformat:2 }}</td>
+                                <td class="text-right font-weight-bold">${{ item.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-right text-muted">Subtotal</td>
+                                <td class="text-right">${{ pedido.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% if pedido.descuento %}
+                            <tr>
+                                <td colspan="3" class="text-right text-muted">Descuento</td>
+                                <td class="text-right text-danger">-${{ pedido.descuento|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="order-detail-total">
+                                <td colspan="3" class="text-right"><strong>TOTAL</strong></td>
+                                <td class="text-right"><strong>${{ pedido.total|floatformat:2 }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <form method="post" action="{% url 'caja:caja_completar' pedido.pk %}" novalidate
+              data-total="{{ pedido.total|unlocalize }}"
+              data-buscar-url="{% url 'caja:clientes_buscar' %}">
+            {% csrf_token %}
+
+            <div class="card modern-card mb-4">
+                <div class="card-header">
+                    <h2 class="h6 m-0"><i class="fas fa-money-bill-wave text-primary"></i> Pago</h2>
+                </div>
+                <div class="card-body">
+                    {% with fd=form_data %}
+                    <div class="form-group">
+                        <label for="metodo_pago">Método de pago</label>
+                        <select name="metodo_pago" id="metodo_pago" class="form-control" required>
+                            {% for k, v in metodos_pago %}
+                            <option value="{{ k }}" {% if fd.metodo_pago == k %}selected{% endif %}>{{ v }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="recibido-wrap" class="form-group {% if fd.metodo_pago != 'efectivo' %}d-none{% endif %}">
+                        <label for="recibido">Monto recibido</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white">$</span>
+                            </div>
+                            <input type="number" name="recibido" id="recibido" class="form-control"
+                                   min="0" step="0.01" placeholder="Ej: {{ pedido.total|floatformat:2 }}"
+                                   inputmode="decimal" value="{{ fd.recibido|default:'' }}"
+                                   data-validar="total" data-validar-total="{{ pedido.total|unlocalize }}"
+                                   data-validar-max-int="10" data-validar-max-dec="2">
+                        </div>
+                        <small class="form-text text-muted">Cuánto pagó el cliente. El vuelto se calcula solo.</small>
+                        <div class="caja-vuelto d-none mt-2" id="vuelto-box">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Vuelto a entregar: <strong id="vuelto-amount">$0.00</strong>
+                        </div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="card modern-card">
+                <div class="card-header">
+                    <h2 class="h6 m-0"><i class="fas fa-file-invoice text-primary"></i> Factura</h2>
+                </div>
+                <div class="card-body">
+                    {% with fd=form_data %}
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="switch-factura-datos"{% if fd.tipo_identificacion|default:'07' != '07' %} checked{% endif %}>
+                            <label class="custom-control-label" for="switch-factura-datos">
+                                El cliente pide factura con sus datos
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="buscar-cliente-wrap">
+                        <label for="buscar-cliente"><i class="fas fa-user-friends text-muted"></i> Cliente habitual</label>
+                        <div class="caja-cliente-search">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                                </div>
+                                <input type="text" id="buscar-cliente" class="form-control"
+                                       placeholder="Buscar por cédula, RUC o pasaporte…"
+                                       maxlength="20" autocomplete="off">
+                            </div>
+                            <small class="form-text text-muted">
+                                La identificación es única por persona: escribí el número y los datos se cargan solos.
+                            </small>
+                            <div id="cliente-cargado" class="caja-cliente-cargado d-none">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Datos del cliente cargados. Podés corregirlos antes de cobrar.</span>
+                            </div>
+                            <ul id="clientes-resultados" class="caja-clientes-dropdown list-unstyled mb-0" hidden></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="tipo-wrap">
+                        <label for="tipo_identificacion">Tipo de identificación</label>
+                        <select name="tipo_identificacion" id="tipo_identificacion" class="form-control">
+                            {% for k, v in tipos_identificacion %}
+                            <option value="{{ k }}" {% if fd.tipo_identificacion|default:'07' == k %}selected{% endif %}>{{ v }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="receptor-consumidor" class="alert alert-info alert-permanent py-2 mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        Se factura a <strong>CONSUMIDOR FINAL</strong> (identificación
+                        <code>9999999999999</code>).
+                    </div>
+
+                    <div id="receptor-fields" class="{% if fd.tipo_identificacion|default:'07' == '07' %}d-none{% endif %}">
+                        <div id="nombres-apellidos-wrap" class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="nombres">Nombres <span class="text-danger">*</span></label>
+                                <input type="text" name="nombres" id="nombres" class="form-control"
+                                       maxlength="60" value="{{ fd.nombres|default:'' }}"
+                                       placeholder="Ej: Josue Andres"
+                                       data-validar="requerido">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="apellidos">Apellidos <span class="text-danger">*</span></label>
+                                <input type="text" name="apellidos" id="apellidos" class="form-control"
+                                       maxlength="60" value="{{ fd.apellidos|default:'' }}"
+                                       placeholder="Ej: Gomez Molina"
+                                       data-validar="requerido">
+                            </div>
+                        </div>
+                        <div id="razon-social-wrap" class="form-group d-none">
+                            <label for="razon_social">Razón social <span class="text-danger">*</span></label>
+                            <input type="text" name="razon_social" id="razon_social" class="form-control"
+                                   maxlength="120" value="{{ fd.razon_social|default:'' }}"
+                                   placeholder="Como figura en el RUC"
+                                   data-validar="requerido">
+                        </div>
+                        <div class="form-group">
+                            <label for="identificacion">Número de identificación <span class="text-danger">*</span></label>
+                            <input type="text" name="identificacion" id="identificacion" class="form-control"
+                                   maxlength="20" inputmode="text" value="{{ fd.identificacion|default:'' }}"
+                                   placeholder=""
+                                   data-validar="requerido identificacion" data-validar-tipo="#tipo_identificacion">
+                            <small class="form-text text-muted" id="ident-ayuda"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="direccion">Dirección</label>
+                            <input type="text" name="direccion" id="direccion" class="form-control"
+                                   maxlength="300" value="{{ fd.direccion|default:'' }}" placeholder="Opcional">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" name="email" id="email" class="form-control"
+                                   maxlength="254" value="{{ fd.email|default:'' }}" placeholder="Opcional"
+                                   data-validar="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" name="telefono" id="telefono" class="form-control"
+                                   maxlength="30" value="{{ fd.telefono|default:'' }}" placeholder="Opcional">
+                        </div>
+                    </div>
+                    {% endwith %}
+
+                    <button type="submit" class="btn btn-success btn-block">
+                        <i class="fas fa-check"></i> Cobrar y emitir factura
+                    </button>
+                    <small class="form-text text-center mt-2">
+                        Al completar se emite la factura electrónica (SRI).
+                    </small>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'caja/js/caja.js' %}"></script>
+{% endblock %}

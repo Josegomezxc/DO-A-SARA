@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logs SRI{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'facturacion/css/comprobante_list.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'facturacion:comprobante_list' %}">Facturación</a></li>
+<li class="breadcrumb-item active">Logs SRI</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de logs SRI">
+    <h1><i class="fas fa-clipboard-list"></i> Logs SRI</h1>
+    <p class="lead">Bitácora de generación, envío y autorización de comprobantes.</p>
+    <div class="hero-actions">
+        <a href="{% url 'facturacion:comprobante_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+<form method="get" class="form-row mb-3 log-filters" role="search" aria-label="Filtrar logs SRI">
+    <div class="col-md-4 mb-2">
+        <input type="search" name="q" class="form-control" placeholder="Buscar por mensaje, clave o número..."
+               value="{{ q }}" aria-label="Buscar en logs">
+    </div>
+    <div class="col-md-3 mb-2">
+        <select name="nivel" class="form-control" aria-label="Filtrar por nivel">
+            <option value="">Todos los niveles</option>
+            {% for value, label in niveles %}
+            <option value="{{ value }}" {% if nivel == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 mb-2">
+        <button class="btn btn-primary btn-block" type="submit"><i class="fas fa-search"></i> Filtrar</button>
+    </div>
+</form>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-scroll text-primary"></i> Bitácora</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="text-center">Nivel</th>
+                        <th>Comprobante</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-nowrap text-muted small">{{ log.creado|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            {% if log.nivel == 'error' %}
+                            <span class="badge badge-danger">Error</span>
+                            {% elif log.nivel == 'warning' %}
+                            <span class="badge badge-warning">Advertencia</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Info</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.comprobante %}
+                            <a href="{% url 'facturacion:comprobante_detail' log.comprobante.pk %}">
+                                {{ log.comprobante.numero }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="small">{{ log.mensaje }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                            No hay logs que coincidan con el filtro.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include '_pagination.html' %}
+{% endblock %}

@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 from .models import Profile
 
@@ -26,11 +27,13 @@ class EmpleadoCreateForm(forms.Form):
 
     username = forms.CharField(
         label='Usuario',
+        min_length=3,
         max_length=150,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Nombre de usuario',
             'autocomplete': 'off',
+            'data-validar': 'requerido usuario',
         }),
     )
     password = forms.CharField(
@@ -40,6 +43,7 @@ class EmpleadoCreateForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Mínimo 8 caracteres',
             'autocomplete': 'new-password',
+            'data-validar': 'requerido password',
         }),
         help_text='Mínimo 8 caracteres. No uses solo números.',
     )
@@ -53,6 +57,11 @@ class EmpleadoCreateForm(forms.Form):
         label='Rol',
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs['data-validar-disponible'] = \
+            reverse('users:verificar_usuario')
 
     def clean_username(self):
         username = self.cleaned_data['username'].strip()
@@ -132,9 +141,15 @@ class PerfilForm(forms.ModelForm):
         model = User
         fields = ('first_name', 'last_name', 'email')
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '150'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': '150'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control', 'maxlength': '150', 'data-validar': 'requerido',
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control', 'maxlength': '150', 'data-validar': 'requerido',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control', 'data-validar': 'email',
+            }),
         }
         labels = {
             'first_name': 'Nombre',

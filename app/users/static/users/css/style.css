@@ -547,6 +547,35 @@ body {
   font-size: 1rem;
 }
 
+/* ============================================================
+   7b. Ojo ver/ocultar contraseña dentro del input
+============================================================ */
+
+.campo-wrap {
+  position: relative;
+}
+
+.campo-wrap .form-control {
+  padding-right: 3rem;
+}
+
+.campo-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #6c757d;
+  padding: 0.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.campo-toggle:hover { color: var(--brand, #2563EB); }
+.campo-toggle:focus { outline: none; color: var(--brand, #2563EB); }
+
 
 /* ============================================================
    8. Checkboxes / radios con la marca
@@ -1225,3 +1254,53 @@ label + input[type="radio"] { margin-left: 0.4rem; }
 ============================================================ */
 
 /* (sin reglas específicas todavía) */
+
+
+/* ============================================================
+   18. Popup flotante de confirmación (acciones riesgosas)
+============================================================ */
+
+.confirm-popup {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  width: 380px;
+  max-width: calc(100vw - 2rem);
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+}
+
+.confirm-popup.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.confirm-popup .card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.confirm-popup .card-header {
+  border-bottom: 1px solid #f1f3f9;
+  padding: 0.9rem 1.15rem;
+}
+
+.confirm-popup .card-header .close {
+  margin: 0;
+  padding: 0 0 0 0.5rem;
+}
+
+.confirm-popup .card-body {
+  padding: 1rem 1.15rem;
+  color: var(--color-muted, #6c757d);
+  font-size: 0.95rem;
+}
+
+.confirm-popup .card-footer {
+  border-top: 1px solid #f1f3f9;
+  padding: 0.85rem 1.15rem;
+}

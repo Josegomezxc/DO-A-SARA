@@ -101,8 +101,32 @@
                     <dt>Cliente</dt>
                     <dd>{{ pedido.cliente|default:"—" }}</dd>
 
+                    {% if pedido.tipo_identificacion and pedido.tipo_identificacion != '07' and pedido.identificacion %}
+                    <dt>Identificación</dt>
+                    <dd>{{ pedido.get_tipo_identificacion_display }}: {{ pedido.identificacion }}</dd>
+                    {% endif %}
+
+                    {% if pedido.direccion %}
+                    <dt>Dirección</dt>
+                    <dd class="small">{{ pedido.direccion }}</dd>
+                    {% endif %}
+
+                    {% if pedido.email %}
+                    <dt>Email</dt>
+                    <dd class="small">{{ pedido.email }}</dd>
+                    {% endif %}
+
+                    {% if pedido.telefono %}
+                    <dt>Teléfono</dt>
+                    <dd class="small">{{ pedido.telefono }}</dd>
+                    {% endif %}
+
                     <dt>Método de pago</dt>
-                    <dd>{{ pedido.get_metodo_pago_display }}</dd>
+                    <dd>
+                        {% if pedido.estado == 'pendiente' %}
+                        <span class="text-muted"><i class="fas fa-cash-register"></i> Pagar en caja</span>
+                        {% else %}{{ pedido.get_metodo_pago_display }}{% endif %}
+                    </dd>
 
                     {% if pedido.notas %}
                     <dt>Notas</dt>
@@ -111,18 +135,53 @@
                 </dl>
             </div>
             {% if pedido.estado == 'pendiente' %}
-            <div class="card-footer bg-white d-flex">
-                <form method="post" action="{% url 'orders:order_completar' pedido.pk %}" class="flex-fill mr-2">
+            <div class="card-footer bg-white">
+                <form method="post" action="{% url 'orders:order_cancelar' pedido.pk %}">
                     {% csrf_token %}
-                    <button class="btn btn-success btn-block"><i class="fas fa-check"></i> Completar</button>
-                </form>
-                <form method="post" action="{% url 'orders:order_cancelar' pedido.pk %}" class="flex-fill">
-                    {% csrf_token %}
-                    <button class="btn btn-outline-danger btn-block"><i class="fas fa-times"></i> Cancelar</button>
+                    <button type="submit" class="btn btn-outline-danger btn-block btn-confirm"
+                        data-confirm-titulo="¿Cancelar pedido?"
+                        data-confirm="¿Cancelar el pedido {{ pedido.numero }}? Ya no se podrá cobrar."
+                        data-confirm-boton="Cancelar pedido"
+                        data-confirm-clase="btn-danger"
+                        data-confirm-icono="fas fa-times">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
                 </form>
             </div>
             {% endif %}
         </div>
+
+        {% if pedido.comprobante %}
+        <div class="card modern-card">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-file-invoice text-primary"></i> Factura electrónica</h2>
+            </div>
+            <div class="card-body">
+                <dl class="info-dl mb-0">
+                    <dt>Estado</dt>
+                    <dd>
+                        {% if pedido.comprobante.estado == 'autorizada' %}
+                        <span class="badge badge-success">Autorizada</span>
+                        {% elif pedido.comprobante.estado == 'rechazada' %}
+                        <span class="badge badge-danger" title="{{ pedido.comprobante.mensajes }}">Rechazada</span>
+                        {% elif pedido.comprobante.estado == 'enviada' %}
+                        <span class="badge badge-warning">Enviada</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Pendiente</span>
+                        {% endif %}
+                    </dd>
+                    <dt>Número</dt>
+                    <dd>{{ pedido.comprobante.numero }}</dd>
+                    <dt>Clave de acceso</dt>
+                    <dd><small class="text-muted">{{ pedido.comprobante.clave_acceso }}</small></dd>
+                    {% if pedido.comprobante.numero_autorizacion %}
+                    <dt>N° de autorización</dt>
+                    <dd><small class="text-muted">{{ pedido.comprobante.numero_autorizacion }}</small></dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

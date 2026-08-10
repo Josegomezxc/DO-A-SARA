@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.test import TestCase
 
+from .forms import CategoryForm, ProductForm
 from .models import Category, Product
 
 
@@ -53,3 +54,70 @@ class ProductTests(TestCase):
         self.assertEqual(c1.slug, 'hamburguesas')
         self.assertEqual(c2.slug, 'hamburguesas-2')
         self.assertEqual(Category.objects.count(), 2)
+
+
+class FormulariosTests(TestCase):
+    def setUp(self):
+        self.cat = Category.objects.create(nombre='Bebidas')
+
+    # ---------- Nombres ----------
+
+    def test_nombre_con_letras_sueltas_se_normaliza(self):
+        form = ProductForm(data={
+            'nombre': 'c o      l a    s', 'categoria': self.cat.pk,
+            'precio': '2.50', 'activo': 'on',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['nombre'], 'colas')
+
+    def test_nombre_con_palabras_reales_se_conserva(self):
+        form = CategoryForm(data={
+            'nombre': 'Papas   Fritas', 'color': '#2563EB', 'activa': 'on',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['nombre'], 'Papas Fritas')
+
+    def test_nombre_solo_espacios_rechazado(self):
+        form = CategoryForm(data={'nombre': '     ', 'color': '#2563EB', 'activa': 'on'})
+        self.assertFalse(form.is_valid())
+        self.assertIn('El nombre es obligatorio.', form.errors['nombre'])
+
+    def test_nombre_sin_normalizar_no_rompe_unico(self):
+        """'Hamburguesas' y 'Hamburguesas ' deben colisionar tras normalizar."""
+        Category.objects.create(nombre='Hamburguesas')
+        form = CategoryForm(data={'nombre': 'Hamburguesas  ', 'activa': 'on'})
+        self.assertFalse(form.is_valid())
+
+    # ---------- Precio ----------
+
+    def test_precio_mas_de_2_decimales_rechazado(self):
+        form = ProductForm(data={
+            'nombre': 'Cola', 'categoria': self.cat.pk,
+            'precio': '1.005', 'activo': 'on',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('más de 2 decimales', form.errors['precio'][0])
+
+    def test_precio_con_demasiados_enteros_rechazado(self):
+        form = ProductForm(data={
+            'nombre': 'Cola', 'categoria': self.cat.pk,
+            'precio': '100000000', 'activo': 'on',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('8 dígitos enteros', form.errors['precio'][0])
+
+    def test_precio_absurdo_con_coma_rechazado(self):
+        form = ProductForm(data={
+            'nombre': 'Cola', 'categoria': self.cat.pk,
+            'precio': '111111111111111111,000000000000000111111111',
+            'activo': 'on',
+        })
+        self.assertFalse(form.is_valid())
+
+    def test_precio_valido_aceptado(self):
+        form = ProductForm(data={
+            'nombre': 'Cola', 'categoria': self.cat.pk,
+            'precio': '99999999.99', 'activo': 'on',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['precio'], Decimal('99999999.99'))

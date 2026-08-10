@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comprobante {{ comp.numero }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'facturacion:comprobante_list' %}">Facturación</a></li>
+<li class="breadcrumb-item active">{{ comp.numero }}</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera del comprobante">
+    <h1><i class="fas fa-file-invoice"></i> Comprobante {{ comp.numero }}</h1>
+    <p class="lead">
+        {% if comp.estado == 'autorizada' %}
+        <span class="badge badge-success">Autorizada</span>
+        {% elif comp.estado == 'rechazada' %}
+        <span class="badge badge-danger">Rechazada</span>
+        {% elif comp.estado == 'enviada' %}
+        <span class="badge badge-warning">Enviada</span>
+        {% else %}
+        <span class="badge badge-secondary">Pendiente</span>
+        {% endif %}
+        <span class="text-white">· Pedido {{ comp.pedido.numero }} · ${{ comp.pedido.total|floatformat:2 }}</span>
+    </p>
+    <div class="hero-actions">
+        {% if comp.estado == 'pendiente' %}
+        <form method="post" action="{% url 'facturacion:comprobante_reenviar' comp.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn">
+                <i class="fas fa-paper-plane"></i> Reenviar al SRI
+            </button>
+        </form>
+        {% elif comp.estado == 'enviada' %}
+        <form method="post" action="{% url 'facturacion:comprobante_consultar' comp.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn">
+                <i class="fas fa-sync-alt"></i> Consultar autorización
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'facturacion:comprobante_pdf' comp.pk %}" target="_blank" class="btn">
+            <i class="fas fa-print"></i> Imprimir factura (PDF)
+        </a>
+        <a href="{% url 'facturacion:comprobante_xml' comp.pk %}" class="btn">
+            <i class="fas fa-file-code"></i> Descargar XML
+        </a>
+        {% if comp.estado != 'autorizada' %}
+        <form method="post" action="{% url 'facturacion:comprobante_eliminar' comp.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-confirm"
+                    data-confirm-titulo="¿Eliminar comprobante?"
+                    data-confirm="¿Eliminar el comprobante {{ comp.numero }}? El pedido {{ comp.pedido.numero }} podrá facturarse de nuevo."
+                    data-confirm-boton="Sí, eliminar"
+                    data-confirm-clase="btn-danger"
+                    data-confirm-icono="fas fa-trash">
+                <i class="fas fa-trash"></i> Eliminar comprobante
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'facturacion:comprobante_list' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</section>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-info-circle text-primary"></i> Datos del comprobante</h2>
+            </div>
+            <div class="card-body">
+                <dl class="info-dl mb-0">
+                    <dt>Número</dt>
+                    <dd>{{ comp.numero }}</dd>
+                    <dt>Clave de acceso</dt>
+                    <dd><code class="text-break">{{ comp.clave_acceso }}</code></dd>
+                    <dt>Pedido</dt>
+                    <dd><a href="{{ comp.pedido.get_absolute_url }}">{{ comp.pedido.numero }}</a></dd>
+                    <dt>Cliente</dt>
+                    <dd>{{ comp.pedido.cliente|default:"CONSUMIDOR FINAL" }}</dd>
+                    <dt>Total</dt>
+                    <dd class="font-weight-bold">${{ comp.pedido.total|floatformat:2 }}</dd>
+                    <dt>Secuencial</dt>
+                    <dd>{{ comp.secuencial }}</dd>
+                    <dt>Intentos de envío</dt>
+                    <dd>{{ comp.intentos }}</dd>
+                    {% if comp.numero_autorizacion %}
+                    <dt>Número de autorización</dt>
+                    <dd><code class="text-break">{{ comp.numero_autorizacion }}</code></dd>
+                    {% endif %}
+                    <dt>Creado</dt>
+                    <dd>{{ comp.creado|date:"d/m/Y H:i" }}</dd>
+                    <dt>Actualizado</dt>
+                    <dd>{{ comp.actualizado|date:"d/m/Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-comment-dots text-primary"></i> Mensajes del SRI</h2>
+            </div>
+            <div class="card-body">
+                {% if comp.mensajes %}
+                <div class="alert alert-danger alert-permanent mb-0">
+                    <pre class="mb-0 text-danger bg-transparent p-0" style="white-space: pre-wrap;">{{ comp.mensajes }}</pre>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">
+                    <i class="fas fa-check-circle text-success"></i> Sin mensajes del SRI.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h6 m-0"><i class="fas fa-file-code text-primary"></i> XML autorizado por el SRI</h2>
+            </div>
+            <div class="card-body">
+                {% if comp.xml_autorizado %}
+                <pre class="xml-viewer bg-light border rounded p-2 small mb-0">{{ comp.xml_autorizado }}</pre>
+                {% else %}
+                <p class="text-muted mb-0">Todavía no hay XML autorizado.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card modern-card h-100">
+            <div class="card-header">
+                <h2 class="h6 m-0"><i class="fas fa-file-signature text-primary"></i> XML firmado enviado</h2>
+            </div>
+            <div class="card-body">
+                <pre class="xml-viewer bg-light border rounded p-2 small mb-0">{{ comp.xml_firmado }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card modern-card mb-4">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-clipboard-list text-primary"></i> Logs de este comprobante</h2>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0 align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="text-center">Nivel</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-nowrap text-muted small">{{ log.creado|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            {% if log.nivel == 'error' %}
+                            <span class="badge badge-danger">Error</span>
+                            {% elif log.nivel == 'warning' %}
+                            <span class="badge badge-warning">Advertencia</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Info</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="small">{{ log.mensaje }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">Sin logs para este comprobante.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

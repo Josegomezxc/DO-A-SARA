@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Caja - {{ NEGOCIO_NOMBRE }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'caja/css/caja.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Caja</li>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero" aria-label="Cabecera de caja">
+    <h1><i class="fas fa-coins"></i> Caja</h1>
+    <p class="lead">El cliente llega con el ticket, buscás el pedido y cobrás (la factura se emite al completar).</p>
+    <div class="hero-actions">
+        <a href="{% url 'orders:pos' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Volver al POS
+        </a>
+    </div>
+</section>
+
+<div class="card modern-card mb-4">
+    <div class="card-body py-3">
+        <form method="get" role="search">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+                </div>
+                <input type="search" name="q" class="form-control border-left-0"
+                       placeholder="Buscar por número de ticket (ej: P-20260807-00001)..."
+                       aria-label="Buscar ticket" autofocus>
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card modern-card">
+    <div class="card-header">
+        <h2 class="h6 m-0"><i class="fas fa-list text-primary"></i> Pedidos
+            <span class="badge badge-warning ml-1">{{ n_pendientes }} pendientes</span>
+            <span class="badge badge-success ml-1">{{ n_cobrados }} cobrados</span>
+            <span class="badge badge-secondary ml-1">{{ n_cancelados }} cancelados</span>
+        </h2>
+    </div>
+    <div class="card-body p-0">
+        {% if pedidos %}
+        <div class="table-responsive">
+            <table class="table modern-table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Número</th>
+                        <th class="d-none d-md-table-cell">Vendedor</th>
+                        <th class="d-none d-md-table-cell">Ítems</th>
+                        <th class="d-none d-lg-table-cell">Fecha</th>
+                        <th>Estado</th>
+                        <th class="text-right">Total</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr>
+                        <td>
+                            {% if p.estado == 'pendiente' %}
+                            <a href="{% url 'caja:caja_detalle' p.pk %}" class="font-weight-bold">{{ p.numero }}</a>
+                            {% else %}
+                            <span class="font-weight-bold">{{ p.numero }}</span>
+                            {% endif %}
+                            <small class="d-block d-md-none text-muted">{{ p.creado|date:"d/m H:i" }}</small>
+                        </td>
+                        <td class="d-none d-md-table-cell">{{ p.vendedor.get_full_name|default:p.vendedor.username }}</td>
+                        <td class="d-none d-md-table-cell">{{ p.items.count }}</td>
+                        <td class="d-none d-lg-table-cell"><small>{{ p.creado|date:"d/m H:i" }}</small></td>
+                        <td>
+                            {% if p.estado == 'pendiente' %}
+                            <span class="badge badge-warning">Pendiente</span>
+                            {% elif p.estado == 'completado' %}
+                            <span class="badge badge-success">Cobrado</span>
+                            <small class="d-block text-muted">{{ p.get_metodo_pago_display }}</small>
+                            {% else %}
+                            <span class="badge badge-danger">Cancelado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right font-weight-bold">${{ p.total|floatformat:2 }}</td>
+                        <td class="text-right text-nowrap">
+                            {% if p.estado == 'pendiente' %}
+                            <a href="{% url 'caja:caja_detalle' p.pk %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-cash-register"></i> Cobrar
+                            </a>
+                            {% elif p.estado == 'completado' %}
+                            <a href="{% url 'caja:caja_ticket' p.pk %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-print"></i> Ticket
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-check-circle fa-3x mb-2 d-block"></i>
+            No hay pedidos.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

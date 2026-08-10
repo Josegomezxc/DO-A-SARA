@@ -5,6 +5,40 @@ from django.urls import reverse
 from .models import Profile
 
 
+class VerificarUsuarioTests(TestCase):
+    """API JSON usada por la validación en tiempo real del formulario."""
+
+    def setUp(self):
+        User.objects.create_user(username='juan', password='juan12345')
+
+    def test_disponible(self):
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'nuevo1'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), {'disponible': True})
+
+    def test_usado(self):
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'juan'})
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'usado'})
+
+    def test_usado_ignora_mayusculas(self):
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'JUAN'})
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'usado'})
+
+    def test_reservado(self):
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'admin'})
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'reservado'})
+
+    def test_formato_invalido(self):
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'ab'})
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'formato'})
+        resp = self.client.get(reverse('users:verificar_usuario'), {'username': 'espa cio'})
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'formato'})
+
+    def test_vacio(self):
+        resp = self.client.get(reverse('users:verificar_usuario'))
+        self.assertEqual(resp.json(), {'disponible': False, 'motivo': 'vacio'})
+
+
 class UsersTests(TestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(

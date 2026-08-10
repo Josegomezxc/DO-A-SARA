@@ -17,6 +17,9 @@ from app.users.decorators import EmpleadoRequiredMixin
 
 from .forms import OrderEditForm
 from .models import Order, OrderItem
+from .validators import errores_monto
+
+MONTO_MAX_INT = 10  # max_digits=12 en el modelo -> 10 enteros + 2 decimales
 
 
 def _pedidos_visibles(user):
@@ -58,19 +61,19 @@ class POSView(EmpleadoRequiredMixin, TemplateView):
             }
             for p in productos
         ]
-        ctx['metodos_pago'] = Order.METODO_CHOICES
         return ctx
 
 
 MAX_CANTIDAD_POS = Decimal('999')
 
-METODO_PAGO_VALIDOS = {k for k, _ in Order.METODO_CHOICES}
-
 
 @login_required
 @require_POST
 def pos_crear_pedido(request):
-    """Crea un pedido desde el POS via JSON.
+    """Crea un pedido PENDIENTE desde el POS via JSON.
+
+    El POS solo toma el pedido e imprime el ticket; el cobro y la
+    factura se hacen en el módulo Caja.
 
     Valida cada ítem: producto activo existente, cantidad entera positiva
     entre 1 y MAX_CANTIDAD_POS. Si algún ítem falla, se rechaza todo el
@@ -92,26 +95,15 @@ def pos_crear_pedido(request):
     if not isinstance(items, list) or not items:
         return JsonResponse({'ok': False, 'error': 'Agregá al menos un producto.'}, status=400)
 
-    cliente = (data.get('cliente') or '').strip()[:120]
-    metodo = data.get('metodo_pago') or Order.METODO_EFECTIVO
-    if metodo not in METODO_PAGO_VALIDOS:
-        return JsonResponse({'ok': False, 'error': 'Método de pago inválido.'}, status=400)
     notas = (data.get('notas') or '').strip()
+
     try:
         descuento = Decimal(str(data.get('descuento') or '0'))
     except InvalidOperation:
         return JsonResponse({'ok': False, 'error': 'Descuento inválido.'}, status=400)
-    if descuento < 0:
-        return JsonResponse({'ok': False, 'error': 'El descuento no puede ser negativo.'}, status=400)
-    # "completar" solo se acepta como booleano real (true/false).
-    # Un string como "false" NO debe interpretarse como verdadero.
-    completar_raw = data.get('completar', True)
-    if isinstance(completar_raw, str):
-        completar = completar_raw.strip().lower() in ('true', '1', 'yes', 'si', 'sí')
-    elif isinstance(completar_raw, bool):
-        completar = completar_raw
-    else:
-        completar = bool(completar_raw)
+    errores_desc = errores_monto(descuento, max_int=MONTO_MAX_INT)
+    if errores_desc:
+        return JsonResponse({'ok': False, 'error': errores_desc[0]}, status=400)
 
     # Validamos TODOS los items antes de tocar la base
     items_validos = []
@@ -146,8 +138,6 @@ def pos_crear_pedido(request):
     with transaction.atomic():
         pedido = Order.objects.create(
             vendedor=request.user,
-            cliente=cliente,
-            metodo_pago=metodo,
             descuento=descuento,
             notas=notas,
         )
@@ -160,8 +150,6 @@ def pos_crear_pedido(request):
                 nota=nota,
             )
         pedido.recalcular_totales()
-        if completar:
-            pedido.completar(usuario=request.user)
 
     return JsonResponse({
         'ok': True,
@@ -282,22 +270,6 @@ def order_ticket(request, pk):
         'orders/ticket.html',
         {'pedido': pedido, 'iva_pct': iva_pct},
     )
-
-
-@login_required
-@require_POST
-def order_completar(request, pk):
-    pedido = get_object_or_404(_pedidos_visibles(request.user), pk=pk)
-    if pedido.estado != Order.ESTADO_PENDIENTE:
-        messages.error(
-            request,
-            f'Solo se pueden completar pedidos pendientes ("{pedido.numero}" '
-            f'está {pedido.get_estado_display().lower()}).',
-        )
-        return redirect(pedido)
-    pedido.completar(usuario=request.user)
-    messages.success(request, f'Pedido {pedido.numero} completado.')
-    return redirect(pedido)
 
 
 @login_required
